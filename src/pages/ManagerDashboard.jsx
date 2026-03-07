@@ -70,7 +70,7 @@ const fetchQuestions = async () => {
       e.preventDefault();
       if (!newQuestion.trim()) return;
       try {
-         const res = await fetch("http://localhost:5000/manager/questions", {
+         const res = await fetch("https://clever-playfulness-production.up.railway.app/manager/questions", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ club_id: clubId, question: newQuestion })
