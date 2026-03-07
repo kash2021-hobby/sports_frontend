@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: 'clever-playfulness-production.up.railway.app',
+    baseURL: 'https://clever-playfulness-production.up.railway.app',
 });
 
 export const authAPI = {
