@@ -60,7 +60,7 @@ const ManagerDashboard = ({ clubId = 1 }) => {
    };
 const fetchQuestions = async () => {
       try {
-         const res = await fetch(`http://localhost:5000/manager/questions/${clubId}`);
+         const res = await fetch(`https://clever-playfulness-production.up.railway.app/manager/questions/${clubId}`);
          const data = await res.json();
          setQuestions(data);
       } catch (error) { console.error(error); }
