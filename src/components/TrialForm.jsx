@@ -128,7 +128,7 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
       }
 
       try {
-         const response = await fetch("http://localhost:5000/trial/evaluate", {
+         const response = await fetch("https://clever-playfulness-production.up.railway.app/trial/evaluate", {
             method: "POST",
             body: formData,
          });
