@@ -29,11 +29,11 @@ export default function TournamentHub({ clubId }) {
     const fetchData = async () => {
         try {
             // Fetch Tournaments
-            const tourneyRes = await fetch("http://localhost:5000/tournaments");
+            const tourneyRes = await fetch("https://backend.dhsa.co.in/tournaments");
             if (tourneyRes.ok) setTournaments(await tourneyRes.json());
 
             // Fetch Manager's Permanent Team
-            const teamRes = await fetch(`http://localhost:5000/manager/team/${clubId}`);
+            const teamRes = await fetch(`https://backend.dhsa.co.in/manager/team/${clubId}`);
             if (teamRes.ok) setMyTeam(await teamRes.json());
         } catch (error) {
             console.error("Error fetching data:", error);
