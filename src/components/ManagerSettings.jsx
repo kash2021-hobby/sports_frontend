@@ -12,7 +12,7 @@ export default function ManagerSettings({ clubId }) {
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/manager/questions/${clubId}`);
+                const res = await fetch(`https://backend.dhsa.co.in/manager/questions/${clubId}`);
                 if (res.ok) {
                     const data = await res.json();
                     setQuestions(data);
@@ -32,7 +32,7 @@ export default function ManagerSettings({ clubId }) {
         if (!newQuestion.trim()) return;
         
         try {
-            const res = await fetch("http://localhost:5000/manager/questions", {
+            const res = await fetch("https://backend.dhsa.co.in/manager/questions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ club_id: clubId, question: newQuestion })
@@ -53,7 +53,7 @@ export default function ManagerSettings({ clubId }) {
         if (!window.confirm("Are you sure you want to delete this question?")) return;
 
         try {
-            const res = await fetch(`http://localhost:5000/manager/questions/${id}`, {
+            const res = await fetch(`https://backend.dhsa.co.in/manager/questions/${id}`, {
                 method: 'DELETE'
             });
 
@@ -70,7 +70,7 @@ export default function ManagerSettings({ clubId }) {
         if (!editText.trim()) return;
 
         try {
-            const res = await fetch(`http://localhost:5000/manager/questions/${id}`, {
+            const res = await fetch(`https://backend.dhsa.co.in/manager/questions/${id}`, {
                 method: 'PUT',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ question: editText })
