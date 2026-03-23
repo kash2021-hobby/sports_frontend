@@ -16,8 +16,8 @@ export default function MyTournaments({ clubId }) {
     const fetchData = async () => {
         try {
             const [regRes, teamRes] = await Promise.all([
-                fetch(`http://localhost:5000/manager/my-tournaments/${clubId}`),
-                fetch(`http://localhost:5000/manager/team/${clubId}`)
+                fetch(`https://backend.dhsa.co.in/manager/my-tournaments/${clubId}`),
+                fetch(`https://backend.dhsa.co.in/manager/team/${clubId}`)
             ]);
 
             if (regRes.ok) {
@@ -33,7 +33,7 @@ export default function MyTournaments({ clubId }) {
             }
 
             if (actualTeamId) {
-                const matchRes = await fetch(`http://localhost:5000/manager/teams/${actualTeamId}/matches`);
+                const matchRes = await fetch(`https://backend.dhsa.co.in/manager/teams/${actualTeamId}/matches`);
                 if (matchRes.ok) {
                     const matchesData = await matchRes.json();
                     setMyMatches(matchesData);
