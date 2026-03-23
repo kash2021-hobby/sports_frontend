@@ -49,7 +49,7 @@ export default function TournamentBracketManager({ tournament, onClose }) {
 
     const fetchReferees = async () => {
         try {
-            const res = await fetch('http://localhost:5000/admin/referees');
+            const res = await fetch('https://backend.dhsa.co.in/admin/referees');
             if (res.ok) setReferees(await res.json());
         } catch (error) {
             console.error("Error fetching referees:", error);
@@ -59,11 +59,11 @@ export default function TournamentBracketManager({ tournament, onClose }) {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const resMatches = await fetch(`http://localhost:5000/admin/tournaments/${tournament.id}/matches`);
+            const resMatches = await fetch(`https://backend.dhsa.co.in/admin/tournaments/${tournament.id}/matches`);
             if (resMatches.ok) setMatches(await resMatches.json());
 
             if (tournament.format !== 'Knockout') {
-                const resStandings = await fetch(`http://localhost:5000/tournaments/${tournament.id}/standings`);
+                const resStandings = await fetch(`https://backend.dhsa.co.in/tournaments/${tournament.id}/standings`);
                 if (resStandings.ok) setStandings(await resStandings.json());
             }
         } catch (error) {
@@ -85,7 +85,7 @@ export default function TournamentBracketManager({ tournament, onClose }) {
 
     const handleSaveTeams = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/admin/matches/${selectedMatch.id}/edit-teams`, {
+            const res = await fetch(`https://backend.dhsa.co.in/admin/matches/${selectedMatch.id}/edit-teams`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -107,7 +107,7 @@ export default function TournamentBracketManager({ tournament, onClose }) {
         if (!window.confirm(`Generate ${tournament.format} fixtures?`)) return;
         setGenerating(true);
         try {
-           const res = await fetch(`http://localhost:5000/admin/tournaments/${tournament.id}/generate-fixtures`, { method: 'POST' });
+           const res = await fetch(`https://backend.dhsa.co.in/admin/tournaments/${tournament.id}/generate-fixtures`, { method: 'POST' });
             if (res.ok) {
                 alert(`Success! Bracket Map built.`);
                 fetchData();
@@ -123,7 +123,7 @@ export default function TournamentBracketManager({ tournament, onClose }) {
         if (isBracketLocked) return;
         if (!window.confirm("🚨 Delete ALL matches and scores permanently?")) return;
         try {
-            const res = await fetch(`http://localhost:5000/admin/tournaments/${tournament.id}/fixtures`, { method: 'DELETE' });
+            const res = await fetch(`https://backend.dhsa.co.in/admin/tournaments/${tournament.id}/fixtures`, { method: 'DELETE' });
             if (res.ok) {
                 alert("Bracket reset.");
                 setMatches([]);
@@ -141,7 +141,7 @@ export default function TournamentBracketManager({ tournament, onClose }) {
         }
         
         try {
-            const res = await fetch(`http://localhost:5000/admin/matches/${selectedMatch.id}/assign-referee`, {
+            const res = await fetch(`https://backend.dhsa.co.in/admin/matches/${selectedMatch.id}/assign-referee`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -161,7 +161,7 @@ export default function TournamentBracketManager({ tournament, onClose }) {
 
     const handleToggleLive = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/admin/matches/${selectedMatch.id}/toggle-live`, { method: 'PUT' });
+            const res = await fetch(`https://backend.dhsa.co.in/admin/matches/${selectedMatch.id}/toggle-live`, { method: 'PUT' });
             if (res.ok) { 
                 fetchData(); 
                 setSelectedMatch(null); 
@@ -175,7 +175,7 @@ export default function TournamentBracketManager({ tournament, onClose }) {
     // 🌟 NEW: Update Score Without Completing
     const handleUpdateLiveScore = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/admin/matches/${selectedMatch.id}/update-score`, {
+            const res = await fetch(`https://backend.dhsa.co.in/admin/matches/${selectedMatch.id}/update-score`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ team1_score: scores.team1, team2_score: scores.team2 })
@@ -196,7 +196,7 @@ export default function TournamentBracketManager({ tournament, onClose }) {
             return;
         }
         try {
-            const res = await fetch(`http://localhost:5000/admin/matches/${selectedMatch.id}/complete`, {
+            const res = await fetch(`https://backend.dhsa.co.in/admin/matches/${selectedMatch.id}/complete`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ team1_score: scores.team1, team2_score: scores.team2 })
