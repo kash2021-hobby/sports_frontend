@@ -23,7 +23,7 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
                     <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
                         <Shield className="w-6 h-6 text-white" />
                     </div>
-                    <span className="text-xl font-extrabold tracking-tight">Coach<span className="text-emerald-400">Pro</span></span>
+                    <span className="text-xl font-extrabold tracking-tight">Secretary<span className="text-emerald-400">Pro</span></span>
                 </div>
                 <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
                     <X className="w-6 h-6" />
@@ -55,8 +55,7 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
                 <div className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl border border-slate-700/50">
                     <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-slate-700">M</div>
                     <div className="flex-1 overflow-hidden">
-                        <p className="text-sm font-bold text-white truncate">Manager Name</p>
-                        <p className="text-xs text-slate-400 truncate">FC Academy</p>
+                        <p className="text-sm font-bold text-white truncate">Secretary Name</p>
                     </div>
                     <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700/50 rounded-lg transition-colors group">
                         <LogOut className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
