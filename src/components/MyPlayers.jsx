@@ -20,7 +20,7 @@ export default function MyPlayers({ clubId }) {
 
     const fetchMyPlayers = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/clubs/applications?club_id=${clubId}`);
+            const res = await fetch(`https://backend.dhsa.co.in/clubs/applications?club_id=${clubId}`);
             if (res.ok) {
                 const data = await res.json();
                 const approvedPlayers = data.filter(p => p.status === "Registered");
