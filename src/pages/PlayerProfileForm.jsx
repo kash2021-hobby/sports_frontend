@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { playerAPI } from "../services/api";
+import { playerAPI, adminAPI } from "../services/api"; 
 import { useNavigate } from "react-router-dom";
 
 const PlayerProfileForm = () => {
@@ -10,6 +10,7 @@ const PlayerProfileForm = () => {
     const playerId = currentUser?.id || null;
 
     const [loading, setLoading] = useState(false);
+    const [clubs, setClubs] = useState([]); 
 
     const [formData, setFormData] = useState({
         full_name: "",
@@ -34,22 +35,41 @@ const PlayerProfileForm = () => {
         phone: "",
         emergency_contact_name: "",
         emergency_contact_phone: "",
-        club_applied: "",
+        club_applied: "", 
         injury_last_6_months: "",
         pain_running: "",
         medical_treatment: ""
     });
 
+    // 🌟 UPDATED: Added state for 3 distinct government documents
     const [files, setFiles] = useState({
         player_photo: null,
-        gov_id_file: null,
+        gov_doc_1: null,
+        gov_doc_2: null,
+        gov_doc_3: null,
         fitness_certificate: null
     });
 
+    /* ===============================
+       FETCH CLUBS & AUTH CHECK
+    ================================ */
     useEffect(() => {
         if (!playerId) {
             navigate("/login");
+            return;
         }
+
+        const loadClubs = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/clubs"); 
+                const data = await res.json();
+                setClubs(data);
+            } catch (err) {
+                console.error("Failed to fetch clubs", err);
+            }
+        };
+
+        loadClubs();
     }, [playerId, navigate]);
 
     /* ===============================
@@ -109,7 +129,6 @@ const PlayerProfileForm = () => {
         setLoading(false);
     };
 
-    // Shared input styling for cleaner JSX
     const inputClasses = "w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all duration-200 text-slate-800 font-medium placeholder:text-slate-400 placeholder:font-normal";
     const labelClasses = "block text-slate-700 text-sm font-bold mb-2 ml-1 tracking-wide";
 
@@ -118,7 +137,7 @@ const PlayerProfileForm = () => {
             <div className="max-w-4xl mx-auto">
                 
                 {/* --- HEADER --- */}
-                <header className="mb-10 text-center bg-white p-8 rounded-3xl shadow-sm border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <header className="mb-10 text-center bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4 text-emerald-600 shadow-sm border border-emerald-200">
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
@@ -218,10 +237,6 @@ const PlayerProfileForm = () => {
                                 <label className={labelClasses}>Years of Experience</label>
                                 <input type="number" name="experience_years" placeholder="Years playing" value={formData.experience_years} onChange={handleChange} className={inputClasses} required />
                             </div>
-                            <div>
-                                <label className={labelClasses}>Preferred Team / Current Club</label>
-                                <input name="preferred_team" placeholder="Current or Preferred Team" value={formData.preferred_team} onChange={handleChange} className={inputClasses} />
-                            </div>
                         </div>
                     </div>
 
@@ -312,7 +327,6 @@ const PlayerProfileForm = () => {
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
@@ -322,7 +336,8 @@ const PlayerProfileForm = () => {
                             <span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm">6</span> 
                             Required Documents
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* 🌟 UPDATED: Changed to a 2-column or 3-column layout to fit 5 total files clearly */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             
                             <div className="space-y-2">
                                 <label className={labelClasses}>Player Photo <span className="text-rose-500">*</span></label>
@@ -330,8 +345,18 @@ const PlayerProfileForm = () => {
                             </div>
                             
                             <div className="space-y-2">
-                                <label className={labelClasses}>Aadhaar / Gov ID <span className="text-rose-500">*</span></label>
-                                <input type="file" name="gov_id_file" onChange={handleFileChange} required className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-colors border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
+                                <label className={labelClasses}>Gov Document 1 (e.g., Aadhaar) <span className="text-rose-500">*</span></label>
+                                <input type="file" name="gov_doc_1" onChange={handleFileChange} required className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-colors border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className={labelClasses}>Gov Document 2 (e.g., PAN Card) <span className="text-rose-500">*</span></label>
+                                <input type="file" name="gov_doc_2" onChange={handleFileChange} required className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-colors border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className={labelClasses}>Gov Document 3 (e.g., Passport/Voter ID) <span className="text-rose-500">*</span></label>
+                                <input type="file" name="gov_doc_3" onChange={handleFileChange} required className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-colors border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
                             </div>
                             
                             <div className="space-y-2">
@@ -346,24 +371,31 @@ const PlayerProfileForm = () => {
                     <div className="bg-emerald-900 p-8 md:p-10 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 transform transition-transform hover:scale-[1.01]">
                         <div className="w-full md:w-1/2">
                             <h3 className="text-2xl font-bold text-white mb-2">Ready to Apply?</h3>
-                            <p className="text-emerald-200 mb-4 font-medium">Enter the Club ID you wish to join and submit your profile for review.</p>
-                            <input name="club_applied" placeholder="Enter Target Club ID (e.g., 1)" value={formData.club_applied} onChange={handleChange} className="w-full bg-emerald-800/50 border border-emerald-700 p-4 rounded-xl focus:bg-white focus:text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 transition-all text-white placeholder:text-emerald-400 font-bold tracking-wide" required />
+                            <p className="text-emerald-200 mb-4 font-medium">Select the Club you wish to join from the list below.</p>
+                            
+                            <select 
+                                name="club_applied" 
+                                value={formData.club_applied} 
+                                onChange={handleChange} 
+                                className="w-full bg-emerald-800/50 border border-emerald-700 p-4 rounded-xl focus:bg-white focus:text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 transition-all text-white font-bold tracking-wide cursor-pointer appearance-none"
+                                required
+                            >
+                                <option value="" className="text-slate-900">-- Select Target Club --</option>
+                                {clubs.map(club => (
+                                    <option key={club.id} value={club.id} className="text-slate-900">
+                                        {club.name} ({club.city})
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                         
                         <div className="w-full md:w-auto flex-shrink-0 mt-4 md:mt-0">
                             <button 
                                 type="submit" 
                                 disabled={loading}
-                                className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-500 disabled:shadow-none text-emerald-950 font-extrabold text-lg px-12 py-5 rounded-2xl shadow-lg shadow-emerald-950/50 transition-all active:scale-95 flex items-center justify-center gap-3"
+                                className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-500 text-emerald-950 font-extrabold text-lg px-12 py-5 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3"
                             >
-                                {loading ? (
-                                    <>
-                                        <svg className="animate-spin h-6 w-6 text-emerald-950" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                        Uploading...
-                                    </>
-                                ) : (
-                                    "Submit Application"
-                                )}
+                                {loading ? "Uploading..." : "Submit Application"}
                             </button>
                         </div>
                     </div>

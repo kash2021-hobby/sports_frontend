@@ -11,6 +11,9 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
 
    // State for dynamic questions
    const [answers, setAnswers] = useState({});
+   
+   // 🌟 NEW: Local state to hold questions fetched by the form itself
+   const [localQuestions, setLocalQuestions] = useState(questions);
 
    // State for medical notes & recommendation
    const [medicalNotes, setMedicalNotes] = useState("");
@@ -24,8 +27,29 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
    const videoRef = useRef(null);
    const canvasRef = useRef(null);
 
-   // Loading state
    const [isSubmitting, setIsSubmitting] = useState(false);
+
+   // 🌟 NEW: Fetch questions directly from backend when the form opens
+   useEffect(() => {
+      const fetchQuestions = async () => {
+         try {
+            const res = await fetch(`http://localhost:5000/manager/questions/${clubId}`);
+            if (res.ok) {
+               const data = await res.json();
+               setLocalQuestions(data);
+            }
+         } catch (err) {
+            console.error("Failed to fetch trial questions:", err);
+         }
+      };
+
+      // If the parent didn't pass questions, fetch them!
+      if (questions.length === 0 && clubId) {
+         fetchQuestions();
+      } else {
+         setLocalQuestions(questions);
+      }
+   }, [clubId, questions]);
 
    // Clean up the camera stream when the component closes
    useEffect(() => {
@@ -41,14 +65,12 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
    ================================ */
    const startCamera = async () => {
       try {
-         // facingMode: "environment" prefers the rear camera on mobile devices
          const stream = await navigator.mediaDevices.getUserMedia({ 
             video: { facingMode: "environment" } 
          });
          setMediaStream(stream);
          setIsCameraOpen(true);
          
-         // Attach stream to the video element after a short delay to ensure rendering
          setTimeout(() => {
             if (videoRef.current) {
                videoRef.current.srcObject = stream;
@@ -73,20 +95,17 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
          const video = videoRef.current;
          const canvas = canvasRef.current;
          
-         // Set canvas dimensions to match the video feed
          canvas.width = video.videoWidth;
          canvas.height = video.videoHeight;
          
-         // Draw the current video frame onto the canvas
          const context = canvas.getContext("2d");
          context.drawImage(video, 0, 0, canvas.width, canvas.height);
          
-         // Convert the canvas image into a File object for the backend
          canvas.toBlob((blob) => {
             const file = new File([blob], `trial_photo_${player.id}.jpg`, { type: "image/jpeg" });
             setPhotoFile(file);
             setPhotoPreview(URL.createObjectURL(file));
-            stopCamera(); // Turn off the camera after snapping
+            stopCamera();
          }, "image/jpeg", 0.9);
       }
    };
@@ -98,7 +117,6 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
       setScores(prev => ({ ...prev, [field]: value }));
    };
 
-   // This correctly uses the question string as the key to store the "Yes"/"No" value
    const handleAnswerChange = (questionText, value) => {
       setAnswers(prev => ({ ...prev, [questionText]: value }));
    };
@@ -128,7 +146,7 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
       }
 
       try {
-         const response = await fetch("https://clever-playfulness-production.up.railway.app/trial/evaluate", {
+         const response = await fetch("http://localhost:5000/trial/evaluate", {
             method: "POST",
             body: formData,
          });
@@ -151,7 +169,6 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
    return (
       <div className="flex flex-col h-full max-h-[90vh] bg-white rounded-3xl overflow-hidden">
          
-         {/* HEADER */}
          <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
             <div>
                <h2 className="text-2xl font-extrabold text-slate-900">Evaluate Player</h2>
@@ -165,11 +182,9 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
             </button>
          </div>
 
-         {/* SCROLLABLE FORM BODY */}
          <div className="p-6 overflow-y-auto custom-scrollbar flex-grow">
             <form id="evaluation-form" onSubmit={handleSubmit} className="space-y-8">
 
-               {/* 1. SKILL RATINGS */}
                <section>
                   <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
                      Technical Ratings (1-10)
@@ -191,14 +206,14 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
                   </div>
                </section>
 
-              {/* 2. DYNAMIC CHECKLIST */}
-               {questions && questions.length > 0 && (
+              {/* 🌟 NEW: Using localQuestions instead of props.questions */}
+               {localQuestions && localQuestions.length > 0 && (
                   <section>
                      <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
                         Manager Checklist
                      </h3>
                      <div className="space-y-3">
-                        {questions.map((q) => (
+                        {localQuestions.map((q) => (
                            <div key={q.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                               <span className="text-sm font-medium text-slate-800 flex-1">
                                  {q.question}
@@ -209,7 +224,6 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
                                        type="radio" 
                                        name={`question-${q.id}`} 
                                        value="Yes"
-                                       // ✅ THIS IS THE FIX: Pass the exact string (q.question)
                                        onChange={(e) => handleAnswerChange(q.question, e.target.value)}
                                        className="text-emerald-500 focus:ring-emerald-500 w-4 h-4"
                                     />
@@ -220,7 +234,6 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
                                        type="radio" 
                                        name={`question-${q.id}`} 
                                        value="No"
-                                       // ✅ THIS IS THE FIX: Pass the exact string (q.question)
                                        onChange={(e) => handleAnswerChange(q.question, e.target.value)}
                                        className="text-rose-500 focus:ring-rose-500 w-4 h-4"
                                     />
@@ -233,7 +246,6 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
                   </section>
                )}
 
-               {/* 3. MEDICAL NOTES */}
                <section>
                   <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
                      Medical & Physical Notes
@@ -247,14 +259,12 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
                   ></textarea>
                </section>
 
-               {/* 4. IN-APP CAMERA FOR LIVE PHOTO */}
                <section>
                   <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
                      Verification Photo
                   </h3>
                   <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-2xl p-6 bg-slate-50 transition-colors">
                      
-                     {/* Hidden Canvas to capture the image frame */}
                      <canvas ref={canvasRef} className="hidden"></canvas>
 
                      {isCameraOpen ? (
@@ -311,7 +321,6 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
                   </div>
                </section>
 
-               {/* 5. RECOMMENDATION TOGGLE */}
                <section>
                   <label className={`flex items-center justify-between p-5 rounded-2xl border-2 cursor-pointer transition-all shadow-sm ${recommendation ? 'bg-emerald-50 border-emerald-500' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
                      <div>
@@ -334,7 +343,6 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
             </form>
          </div>
 
-         {/* FOOTER ACTIONS */}
          <div className="px-6 py-4 border-t border-slate-100 bg-white flex gap-3 justify-end rounded-b-3xl">
             <button
                type="button"

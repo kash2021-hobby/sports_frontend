@@ -33,19 +33,9 @@ const PlayerDashboard = () => {
     }, [navigate]);
 
    /* ===============================
-       DRIVE IMAGE HELPER (TYPO FIXED)
+       DRIVE IMAGE HELPER
     ================================ */
-    const getDriveImageUrl = (url) => {
-      if (!url) return "https://placehold.co/150x150?text=No+Photo";
-      
-      const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/);
-      const fileId = match ? match[1] : null;
-
-      if (!fileId) return url;
-
-      // This is the "secret" Google User Content endpoint for raw image delivery
-      return `https://lh3.googleusercontent.com/d/${fileId}`;
-   };
+     const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
 
     const logout = () => {
         localStorage.removeItem("currentUser");
@@ -275,19 +265,28 @@ const PlayerDashboard = () => {
                                         </div>
                                     </div>
 
+                                    {/* 🌟 UPDATED DOCUMENTS SECTION 🌟 */}
                                     <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex-grow">
                                         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
                                             <span className="w-2 h-5 bg-emerald-500 rounded-full"></span> Documents
                                         </h3>
                                         <div className="flex flex-col gap-3">
                                             
-                                            {/* FIXED: Removed getDriveImageUrl wrapper so it opens the preview properly */}
-                                            <a href={playerData.gov_id_url || "#"} target="_blank" rel="noreferrer" className="flex items-center justify-between bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 border border-slate-100 p-3 rounded-xl transition-all group">
-                                                <span className="font-semibold text-slate-700 group-hover:text-emerald-700 text-sm">Government ID</span>
+                                            <a href={playerData.gov_doc_1_url || "#"} target="_blank" rel="noreferrer" className="flex items-center justify-between bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 border border-slate-100 p-3 rounded-xl transition-all group">
+                                                <span className="font-semibold text-slate-700 group-hover:text-emerald-700 text-sm">Gov Document 1</span>
+                                                <svg className="w-4 h-4 text-slate-400 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                            </a>
+
+                                            <a href={playerData.gov_doc_2_url || "#"} target="_blank" rel="noreferrer" className="flex items-center justify-between bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 border border-slate-100 p-3 rounded-xl transition-all group">
+                                                <span className="font-semibold text-slate-700 group-hover:text-emerald-700 text-sm">Gov Document 2</span>
+                                                <svg className="w-4 h-4 text-slate-400 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                            </a>
+
+                                            <a href={playerData.gov_doc_3_url || "#"} target="_blank" rel="noreferrer" className="flex items-center justify-between bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 border border-slate-100 p-3 rounded-xl transition-all group">
+                                                <span className="font-semibold text-slate-700 group-hover:text-emerald-700 text-sm">Gov Document 3</span>
                                                 <svg className="w-4 h-4 text-slate-400 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                                             </a>
                                             
-                                            {/* FIXED: Removed getDriveImageUrl wrapper so it opens the preview properly */}
                                             <a href={playerData.fitness_certificate_url || "#"} target="_blank" rel="noreferrer" className="flex items-center justify-between bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 border border-slate-100 p-3 rounded-xl transition-all group">
                                                 <span className="font-semibold text-slate-700 group-hover:text-emerald-700 text-sm">Fitness Certificate</span>
                                                 <svg className="w-4 h-4 text-slate-400 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>

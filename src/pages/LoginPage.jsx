@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 
-const LoginPage = () => {
+// 🌟 ADDED: destructured onLoginSuccess from props
+const LoginPage = ({ onLoginSuccess }) => {
+    
     const [credentials, setCredentials] = useState({ phone: '', mpin: '' });
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -18,18 +20,30 @@ const LoginPage = () => {
             const response = await authAPI.login(credentials.phone, credentials.mpin);
             const { user } = response.data;
             
-            // Save user session
+            // 1. Save session to localStorage
             localStorage.setItem('currentUser', JSON.stringify(user));
             
-            // Route based on ROLE
+            // 🌟 2. TRIGGER STATE UPDATE IN APP.JSX
+            // This ensures the App component "wakes up" and sees the new user immediately
+            if (onLoginSuccess) {
+                onLoginSuccess();
+            }
+            
+            // 3. Role-based navigation
             if (user.role === 'admin') {
                 navigate('/admin-dashboard');
             } 
             else if (user.role === 'manager') {
-                navigate('/manager-dashboard');
+                if (!user.club_id) {
+                    navigate('/club-setup');
+                } else {
+                    navigate('/manager-dashboard');
+                }
+            } 
+            else if (user.role === 'referee') {
+                navigate('/referee-dashboard');
             } 
             else if (user.role === 'player') {
-                // Check if player has completed profile (name exists)
                 if (!user.name) {
                     navigate('/profile-setup');
                 } else {
@@ -38,6 +52,7 @@ const LoginPage = () => {
             }
             
         } catch (error) {
+            console.error("Login Error:", error);
             alert(error.response?.data?.error || "Invalid Phone or MPIN.");
         } finally {
             setLoading(false);
@@ -46,7 +61,6 @@ const LoginPage = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans">
-            
             <div className="bg-white p-10 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 w-full max-w-md transform transition-all duration-300 hover:-translate-y-1">
                 
                 {/* --- HEADER ICON --- */}
@@ -134,7 +148,6 @@ const LoginPage = () => {
                     </Link>
                 </div>
             </div>
-            
         </div>
     );
 };

@@ -8,18 +8,25 @@ const SignupPage = () => {
     const navigate = useNavigate();
 
     const handleSendOTP = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            await authAPI.sendOTP(phone);
-            // Pass the phone number to the next route via state
-            navigate('/verify-otp', { state: { phone } });
-        } catch (error) {
-            alert("Failed to send OTP. Please try again.");
-        } finally {
-            setLoading(false);
-        }
-    };
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+        // 🌟 STEP 1: Check if phone exists in Player database
+        await authAPI.checkPhone(phone);
+
+        // 🌟 STEP 2: Only if checkPhone succeeds, send the OTP
+        await authAPI.sendOTP(phone);
+        
+        navigate('/verify-otp', { state: { phone } });
+    } catch (error) {
+        // Handle the specific error message from the backend
+        const errorMessage = error.response?.data?.error || "Failed to process request.";
+        alert(errorMessage);
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans">

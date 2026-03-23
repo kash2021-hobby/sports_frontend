@@ -1,0 +1,68 @@
+import React from 'react';
+import { LayoutDashboard, ClipboardList, Shield, Users, Trophy, UserCircle, Settings, X, LogOut, Swords, } from 'lucide-react';
+
+export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, handleLogout }) {
+    const navItems = [
+        { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { id: "Assigned Trials", label: "Assigned Trials", icon: ClipboardList },
+        { id: "My Teams", label: "My Teams", icon: Shield },
+        { id: "My Players", label: "My Players", icon: Users },
+        { id: "Tournament", label: "Tournament Hub", icon: Trophy },
+        { id: "My Tournaments", label: "My Tournaments", icon: Swords },
+        { id: "Profile", label: "Coach Profile", icon: UserCircle },
+        { id: "Settings", label: "Settings", icon: Settings },
+    ];
+
+    return (
+        <aside className={`
+            fixed lg:static inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none flex flex-col
+            ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        `}>
+            <div className="h-20 flex items-center justify-between px-6 border-b border-slate-800">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                        <Shield className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-xl font-extrabold tracking-tight">Coach<span className="text-emerald-400">Pro</span></span>
+                </div>
+                <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
+                    <X className="w-6 h-6" />
+                </button>
+            </div>
+
+            <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+                <div className="px-3 mb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Management</div>
+                {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+                    return (
+                        <button
+                            key={item.id}
+                            onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }}
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group ${
+                                isActive ? "bg-emerald-600/10 text-emerald-400 font-bold" : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-100 font-medium"
+                            }`}
+                        >
+                            <Icon className={`w-5 h-5 ${isActive ? "text-emerald-400" : "text-slate-500 group-hover:text-emerald-400"}`} />
+                            {item.label}
+                            {isActive && <div className="ml-auto w-1.5 h-6 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>}
+                        </button>
+                    );
+                })}
+            </nav>
+
+            <div className="p-4 border-t border-slate-800">
+                <div className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                    <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-slate-700">M</div>
+                    <div className="flex-1 overflow-hidden">
+                        <p className="text-sm font-bold text-white truncate">Manager Name</p>
+                        <p className="text-xs text-slate-400 truncate">FC Academy</p>
+                    </div>
+                    <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700/50 rounded-lg transition-colors group">
+                        <LogOut className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+                    </button>
+                </div>
+            </div>
+        </aside>
+    );
+}

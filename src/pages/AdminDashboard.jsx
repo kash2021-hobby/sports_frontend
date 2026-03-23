@@ -1,8 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { adminAPI } from "../services/api";
+import API, { adminAPI } from "../services/api";
+import { 
+    LayoutDashboard, Users, UserPlus, FileText, 
+    UserCog, Shield, Trophy, Flag, Bell, 
+    Menu, X, Search, ChevronRight, LogOut 
+} from "lucide-react";
+import UsersPage from '../components/UsersPage';
+import CoachManagement from '../components/CoachManagement';
+import PlayersPage from '../components/PlayersPage';
+import NotificationsPage from '../components/NotificationsPage';
+import TeamsPage from '../components/TeamsPage';
+import TournamentsPage from '../components/TournamentsPage';
+import RefereePage from '../components/RefereePage';
 
-const AdminDashboard = () => {
-
+/* =========================================================================
+   1. EXISTING APPLICATIONS MODULE
+========================================================================= */
+const ApplicationsView = () => {
     const [players, setPlayers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [viewPlayer, setViewPlayer] = useState(null);
@@ -12,20 +26,7 @@ const AdminDashboard = () => {
         fetchPlayers();
     }, []);
 
-    /* ===============================
-       DRIVE IMAGE HELPER (FIXED)
-    ================================ */
-    const getDriveImageUrl = (url) => {
-      if (!url) return "https://placehold.co/150x150?text=No+Photo";
-      
-      const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/);
-      const fileId = match ? match[1] : null;
-
-      if (!fileId) return url;
-
-      // This is the "secret" Google User Content endpoint for raw image delivery
-      return `https://lh3.googleusercontent.com/d/${fileId}`;
-   };
+   const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
 
     const fetchPlayers = async () => {
         try {
@@ -46,17 +47,16 @@ const AdminDashboard = () => {
         if (!window.confirm(`Are you sure you want to mark this player as ${actionStatus}?`)) return;
 
         try {
-            const response = await fetch("https://clever-playfulness-production.up.railway.app/admin/update-status", {
+            const response = await fetch("http://localhost:5000/admin/update-status", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ player_id: id, status: actionStatus })
             });
 
             if (response.ok) {
-                // Remove player from the grid
                 setPlayers(players.filter(p => p.id !== id));
-                setViewPlayer(null); // Close modal
-                setActionStatus(""); // Reset dropdown
+                setViewPlayer(null);
+                setActionStatus("");
                 alert(`Player successfully marked as: ${actionStatus}`);
             } else {
                 alert("Failed to update status");
@@ -69,7 +69,7 @@ const AdminDashboard = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center">
+            <div className="flex-1 flex flex-col justify-center items-center h-96">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-500"></div>
                 <p className="mt-4 text-slate-500 font-medium">Loading pending applications...</p>
             </div>
@@ -77,345 +77,508 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8 font-sans">
-            <div className="max-w-7xl mx-auto">
-                
-                {/* --- DASHBOARD HEADER --- */}
-                <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                            Admin Dashboard
-                        </h1>
-                        <p className="text-slate-500 mt-1">Review and approve pending player applications.</p>
-                    </div>
-                    <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg font-semibold border border-emerald-100 flex items-center gap-2">
-                        <span>Pending Applications:</span>
-                        <span className="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-md">{players.length}</span>
-                    </div>
-                </header>
+        <div className="animate-in fade-in duration-500">
+            <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div>
+                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Applications Review</h1>
+                    <p className="text-slate-500 mt-1">Review and approve pending player applications.</p>
+                </div>
+                <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg font-semibold border border-emerald-100 flex items-center gap-2">
+                    <span>Pending Applications:</span>
+                    <span className="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-md">{players.length}</span>
+                </div>
+            </header>
 
-                {/* --- PLAYER CARDS GRID --- */}
-                {players.length === 0 ? (
-                    <div className="text-center bg-white rounded-2xl p-12 shadow-sm border border-slate-100 text-slate-500">
-                        <svg className="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p className="text-lg font-medium">No pending players to review at this time.</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {players.map(player => (
-                            <div
-                                key={player.id}
-                                className="bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 transform hover:-translate-y-1 flex flex-col overflow-hidden"
-                            >
-                                <div className="p-6 flex items-start gap-4 flex-grow">
-                                    <img
-                                        src={getDriveImageUrl(player.player_photo_url)}
-                                        alt={player.full_name}
-                                        className="w-16 h-16 rounded-full object-cover shadow-sm border-2 border-slate-50"
-                                        onError={(e) => { e.target.src = "https://placehold.co/150x150?text=No+Photo"; }}
-                                    />
-                                    <div>
-                                        <h3 className="font-bold text-xl text-slate-900 leading-tight mb-1">
-                                            {player.full_name}
-                                        </h3>
-                                        <span className="inline-block bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider">
-                                            {player.position}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
-                                    <button
-                                        onClick={() => setViewPlayer(player)}
-                                        className="flex-1 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-emerald-600 font-semibold py-2.5 rounded-xl transition-colors duration-200"
-                                    >
-                                        Review Details
-                                    </button>
+            {players.length === 0 ? (
+                <div className="text-center bg-white rounded-2xl p-12 shadow-sm border border-slate-100 text-slate-500">
+                    <FileText className="mx-auto h-12 w-12 text-slate-300 mb-4" />
+                    <p className="text-lg font-medium">No pending players to review at this time.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {players.map(player => (
+                        <div key={player.id} className="bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 transform hover:-translate-y-1 flex flex-col overflow-hidden">
+                            <div className="p-6 flex items-start gap-4 flex-grow">
+                                <img src={getDriveImageUrl(player.player_photo_url)} alt={player.full_name} className="w-16 h-16 rounded-full object-cover shadow-sm border-2 border-slate-50" onError={(e) => { e.target.src = "https://placehold.co/150x150?text=No+Photo"; }} />
+                                <div>
+                                    <h3 className="font-bold text-xl text-slate-900 leading-tight mb-1">{player.full_name}</h3>
+                                    <span className="inline-block bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wider">{player.position}</span>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* ===============================
-                    PLAYER DETAILS MODAL
-                =============================== */}
-                {viewPlayer && (
-                    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
-                        <div className="bg-white w-full max-w-5xl rounded-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden animate-in fade-in zoom-in duration-200">
-                            
-                            {/* Modal Header */}
-                            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                                <h2 className="text-2xl font-bold text-slate-900">
-                                    Player Application Profile
-                                </h2>
-                                <button 
-                                    onClick={() => setViewPlayer(null)}
-                                    className="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
+                                <button onClick={() => setViewPlayer(player)} className="flex-1 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-emerald-600 font-semibold py-2.5 rounded-xl transition-colors duration-200">
+                                    Review Details
                                 </button>
                             </div>
+                        </div>
+                    ))}
+                </div>
+            )}
 
-                            {/* Modal Body (Scrollable) */}
-                            <div className="p-6 overflow-y-auto custom-scrollbar flex-grow">
-                                <div className="flex flex-col md:flex-row gap-8 mb-8">
-                                    <img
-                                        src={getDriveImageUrl(viewPlayer.player_photo_url)}
-                                        alt={viewPlayer.full_name}
-                                        className="w-32 h-32 md:w-48 md:h-48 rounded-2xl object-cover shadow-md border-4 border-slate-50"
-                                        onError={(e) => { e.target.src = "https://placehold.co/150x150?text=No+Photo"; }}
-                                    />
-                                    <div className="flex flex-col justify-center">
-                                        <h2 className="text-4xl font-extrabold text-slate-900">{viewPlayer.full_name}</h2>
-                                        <div className="mt-2 flex flex-wrap gap-2">
-                                            <span className="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">{viewPlayer.position}</span>
-                                            <span className="bg-slate-100 text-slate-700 text-sm font-semibold px-3 py-1 rounded-full">{viewPlayer.age} Years Old</span>
+            {viewPlayer && (
+                <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+                    <div className="bg-white w-full max-w-5xl rounded-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h2 className="text-2xl font-bold text-slate-900">Player Application Profile</h2>
+                            <button onClick={() => setViewPlayer(null)} className="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="p-6 overflow-y-auto custom-scrollbar flex-grow">
+                            <div className="flex flex-col md:flex-row gap-8 mb-8">
+                                <img src={getDriveImageUrl(viewPlayer.player_photo_url)} alt={viewPlayer.full_name} className="w-32 h-32 md:w-48 md:h-48 rounded-2xl object-cover shadow-md border-4 border-slate-50" onError={(e) => { e.target.src = "https://placehold.co/150x150?text=No+Photo"; }} />
+                                <div className="flex flex-col justify-center">
+                                    <h2 className="text-4xl font-extrabold text-slate-900">{viewPlayer.full_name}</h2>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        <span className="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">{viewPlayer.position}</span>
+                                        <span className="bg-slate-100 text-slate-700 text-sm font-semibold px-3 py-1 rounded-full">{viewPlayer.age} Years Old</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <div className="space-y-8">
+                                    <section>
+                                        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4"><span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Personal & Contact</h3>
+                                        <div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100">
+                                            <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">DOB</span> <span className="font-semibold text-slate-900">{viewPlayer.dob}</span></p>
+                                            <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Location</span> <span className="font-semibold text-slate-900">{viewPlayer.city}, {viewPlayer.district}</span></p>
+                                            <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Email</span> <span className="font-semibold text-slate-900">{viewPlayer.email}</span></p>
+                                            <p className="flex justify-between"><span className="text-slate-500 uppercase font-bold text-xs">Phone</span> <span className="font-semibold text-slate-900">{viewPlayer.phone}</span></p>
                                         </div>
-                                    </div>
+                                    </section>
+                                    
+                                    <section>
+                                        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4"><span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Documents</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                                                <p className="font-semibold mb-3 text-slate-700">Gov Document 1</p>
+                                                {viewPlayer.gov_doc_1_url ? (
+                                                    <iframe src={viewPlayer.gov_doc_1_url} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Gov Doc 1"></iframe>
+                                                ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
+                                            </div>
+                                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                                                <p className="font-semibold mb-3 text-slate-700">Gov Document 2</p>
+                                                {viewPlayer.gov_doc_2_url ? (
+                                                    <iframe src={viewPlayer.gov_doc_2_url} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Gov Doc 2"></iframe>
+                                                ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
+                                            </div>
+                                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                                                <p className="font-semibold mb-3 text-slate-700">Gov Document 3</p>
+                                                {viewPlayer.gov_doc_3_url ? (
+                                                    <iframe src={viewPlayer.gov_doc_3_url} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Gov Doc 3"></iframe>
+                                                ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
+                                            </div>
+                                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                                                <p className="font-semibold mb-3 text-slate-700">Fitness Certificate</p>
+                                                {viewPlayer.fitness_certificate_url ? (
+                                                    <iframe src={viewPlayer.fitness_certificate_url} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Fitness Certificate"></iframe>
+                                                ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
+                                            </div>
+                                        </div>
+                                    </section>
                                 </div>
 
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                    {/* Column 1 */}
-                                    <div className="space-y-8">
-                                        <section>
-                                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
-                                                <span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Personal & Contact
-                                            </h3>
-                                            <div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100">
-                                                <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">DOB</span> <span className="font-semibold text-slate-900">{viewPlayer.dob}</span></p>
-                                                <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Gender</span> <span className="font-semibold text-slate-900">{viewPlayer.gender}</span></p>
-                                                <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Location</span> <span className="font-semibold text-slate-900">{viewPlayer.city}, {viewPlayer.district}</span></p>
-                                                <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Email</span> <span className="font-semibold text-slate-900">{viewPlayer.email}</span></p>
-                                                <p className="flex justify-between"><span className="text-slate-500 uppercase font-bold text-xs">Phone</span> <span className="font-semibold text-slate-900">{viewPlayer.phone}</span></p>
-                                            </div>
-                                        </section>
+                                <div className="space-y-8">
+                                    <section>
+                                        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4"><span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Physical & Playing Profile</h3>
+                                        <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl text-sm border border-slate-100 mb-4">
+                                            <p><span className="text-slate-500 block text-xs uppercase font-bold">Height</span> <span className="font-medium text-slate-900">{viewPlayer.height} cm</span></p>
+                                            <p><span className="text-slate-500 block text-xs uppercase font-bold">Weight</span> <span className="font-medium text-slate-900">{viewPlayer.weight} kg</span></p>
+                                            <p><span className="text-slate-500 block text-xs uppercase font-bold">Strong Foot</span> <span className="font-medium text-slate-900">{viewPlayer.strong_foot}</span></p>
+                                            <p><span className="text-slate-500 block text-xs uppercase font-bold">Experience</span> <span className="font-medium text-slate-900">{viewPlayer.experience_years} Years</span></p>
+                                        </div>
+                                    </section>
 
-                                        <section>
-                                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
-                                                <span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Documents
-                                            </h3>
-                                            
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                                                {/* Government ID */}
-                                                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                                                    <p className="font-semibold mb-3 text-slate-700">
-                                                        Government ID
-                                                    </p>
-                                                    {viewPlayer.gov_id_url ? (
-                                                        <iframe
-                                                            src={viewPlayer.gov_id_url}
-                                                            className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50"
-                                                            title="Government ID"
-                                                            allow="autoplay"
-                                                        ></iframe>
-                                                    ) : (
-                                                        <img 
-                                                            src="https://placehold.co/600x400?text=No+Document" 
-                                                            className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" 
-                                                            alt="No Government ID" 
-                                                        />
-                                                    )}
+                                    {viewPlayer.Trials?.length > 0 && (
+                                        <section className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 shadow-sm">
+                                            <div className="flex justify-between items-start mb-6">
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-emerald-900">Trial Evaluation</h3>
+                                                    <p className="text-xs font-semibold text-emerald-700 mt-1">Submitted by Club Manager</p>
                                                 </div>
-
-                                                {/* Fitness Certificate */}
-                                                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                                                    <p className="font-semibold mb-3 text-slate-700">
-                                                        Fitness Certificate
-                                                    </p>
-                                                    {viewPlayer.fitness_certificate_url ? (
-                                                        <iframe
-                                                            src={viewPlayer.fitness_certificate_url}
-                                                            className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50"
-                                                            title="Fitness Certificate"
-                                                            allow="autoplay"
-                                                        ></iframe>
-                                                    ) : (
-                                                        <img 
-                                                            src="https://placehold.co/600x400?text=No+Document" 
-                                                            className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" 
-                                                            alt="No Fitness Certificate" 
-                                                        />
-                                                    )}
-                                                </div>
-
+                                                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm ${viewPlayer.Trials[0].recommendation ? 'bg-emerald-600 text-white' : 'bg-rose-500 text-white'}`}>
+                                                    {viewPlayer.Trials[0].recommendation ? "Recommended" : "Not Recommended"}
+                                                </span>
                                             </div>
-                                        </section>
-                                    </div>
 
-                                    {/* Column 2 */}
-                                    <div className="space-y-8">
-                                        
-                                        {/* Physical & Playing combined for space */}
-                                        <section>
-                                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
-                                                <span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Physical & Playing Profile
-                                            </h3>
-                                            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl text-sm border border-slate-100 mb-4">
-                                                <p><span className="text-slate-500 block text-xs uppercase font-bold">Height</span> <span className="font-medium text-slate-900">{viewPlayer.height} cm</span></p>
-                                                <p><span className="text-slate-500 block text-xs uppercase font-bold">Weight</span> <span className="font-medium text-slate-900">{viewPlayer.weight} kg</span></p>
-                                                <p><span className="text-slate-500 block text-xs uppercase font-bold">Strong Foot</span> <span className="font-medium text-slate-900">{viewPlayer.strong_foot}</span></p>
-                                                <p><span className="text-slate-500 block text-xs uppercase font-bold">Experience</span> <span className="font-medium text-slate-900">{viewPlayer.experience_years} Years</span></p>
-                                            </div>
-                                            <div className="bg-rose-50 border border-rose-100 p-4 rounded-xl text-sm">
-                                                <p className="mb-2"><span className="text-rose-500 block text-xs uppercase font-bold">Recent Injuries (6 mo)</span> <span className="font-medium text-slate-900">{viewPlayer.injury_last_6_months || "None"}</span></p>
-                                                <p><span className="text-rose-500 block text-xs uppercase font-bold">Pain while running</span> <span className="font-medium text-slate-900">{viewPlayer.pain_running || "No"}</span></p>
-                                            </div>
-                                        </section>
-
-                                        {/* =========================================
-                                            UPDATED TRIAL EVALUATION SECTION 
-                                        ========================================== */}
-                                        {viewPlayer.Trials?.length > 0 && (
-                                            <section className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 shadow-sm">
-                                                <div className="flex justify-between items-start mb-6">
-                                                   <div>
-                                                      <h3 className="text-xl font-bold text-emerald-900">Trial Evaluation</h3>
-                                                      <p className="text-xs font-semibold text-emerald-700 mt-1">Submitted by Club Manager</p>
-                                                   </div>
-                                                   <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm ${viewPlayer.Trials[0].recommendation ? 'bg-emerald-600 text-white' : 'bg-rose-500 text-white'}`}>
-                                                         {viewPlayer.Trials[0].recommendation ? "Recommended" : "Not Recommended"}
-                                                   </span>
+                                            <div className="grid grid-cols-2 gap-y-5 gap-x-6 text-sm mb-6 pb-6 border-b border-emerald-200/50">
+                                                <div>
+                                                    <span className="text-emerald-800 block text-xs uppercase font-bold mb-1.5">Pace</span>
+                                                    <div className="w-full bg-emerald-200 rounded-full h-2.5"><div className="bg-emerald-600 h-2.5 rounded-full shadow-inner" style={{ width: `${(viewPlayer.Trials[0].pace / 10) * 100}%` }}></div></div>
+                                                    <span className="font-bold text-emerald-900 float-right mt-1.5">{viewPlayer.Trials[0].pace}/10</span>
                                                 </div>
-
-                                                {/* 1. Technical Scores */}
-                                                <div className="grid grid-cols-2 gap-y-5 gap-x-6 text-sm mb-6 pb-6 border-b border-emerald-200/50">
-                                                    <div>
-                                                        <span className="text-emerald-800 block text-xs uppercase font-bold mb-1.5">Pace</span> 
-                                                        <div className="w-full bg-emerald-200 rounded-full h-2.5"><div className="bg-emerald-600 h-2.5 rounded-full shadow-inner" style={{width: `${(viewPlayer.Trials[0].pace / 10) * 100}%`}}></div></div>
-                                                        <span className="font-bold text-emerald-900 float-right mt-1.5">{viewPlayer.Trials[0].pace}/10</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-emerald-800 block text-xs uppercase font-bold mb-1.5">Passing</span> 
-                                                        <div className="w-full bg-emerald-200 rounded-full h-2.5"><div className="bg-emerald-600 h-2.5 rounded-full shadow-inner" style={{width: `${(viewPlayer.Trials[0].passing / 10) * 100}%`}}></div></div>
-                                                        <span className="font-bold text-emerald-900 float-right mt-1.5">{viewPlayer.Trials[0].passing}/10</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-emerald-800 block text-xs uppercase font-bold mb-1.5">Shooting</span> 
-                                                        <div className="w-full bg-emerald-200 rounded-full h-2.5"><div className="bg-emerald-600 h-2.5 rounded-full shadow-inner" style={{width: `${(viewPlayer.Trials[0].shooting / 10) * 100}%`}}></div></div>
-                                                        <span className="font-bold text-emerald-900 float-right mt-1.5">{viewPlayer.Trials[0].shooting}/10</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-emerald-800 block text-xs uppercase font-bold mb-1.5">Stamina</span> 
-                                                        <div className="w-full bg-emerald-200 rounded-full h-2.5"><div className="bg-emerald-600 h-2.5 rounded-full shadow-inner" style={{width: `${(viewPlayer.Trials[0].stamina / 10) * 100}%`}}></div></div>
-                                                        <span className="font-bold text-emerald-900 float-right mt-1.5">{viewPlayer.Trials[0].stamina}/10</span>
-                                                    </div>
+                                                <div>
+                                                    <span className="text-emerald-800 block text-xs uppercase font-bold mb-1.5">Passing</span>
+                                                    <div className="w-full bg-emerald-200 rounded-full h-2.5"><div className="bg-emerald-600 h-2.5 rounded-full shadow-inner" style={{ width: `${(viewPlayer.Trials[0].passing / 10) * 100}%` }}></div></div>
+                                                    <span className="font-bold text-emerald-900 float-right mt-1.5">{viewPlayer.Trials[0].passing}/10</span>
                                                 </div>
+                                                <div>
+                                                    <span className="text-emerald-800 block text-xs uppercase font-bold mb-1.5">Shooting</span>
+                                                    <div className="w-full bg-emerald-200 rounded-full h-2.5"><div className="bg-emerald-600 h-2.5 rounded-full shadow-inner" style={{ width: `${(viewPlayer.Trials[0].shooting / 10) * 100}%` }}></div></div>
+                                                    <span className="font-bold text-emerald-900 float-right mt-1.5">{viewPlayer.Trials[0].shooting}/10</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-emerald-800 block text-xs uppercase font-bold mb-1.5">Stamina</span>
+                                                    <div className="w-full bg-emerald-200 rounded-full h-2.5"><div className="bg-emerald-600 h-2.5 rounded-full shadow-inner" style={{ width: `${(viewPlayer.Trials[0].stamina / 10) * 100}%` }}></div></div>
+                                                    <span className="font-bold text-emerald-900 float-right mt-1.5">{viewPlayer.Trials[0].stamina}/10</span>
+                                                </div>
+                                            </div>
 
-                                                {/* 2. Manager Checklist Answers */}
-                                                {viewPlayer.Trials[0].checklist_answers && Object.keys(viewPlayer.Trials[0].checklist_answers).length > 0 && (
-                                                   <div className="mb-6 pb-6 border-b border-emerald-200/50">
-                                                      <span className="text-emerald-800 block text-xs uppercase font-bold mb-3">Manager Checklist Results</span>
-                                                      <div className="grid grid-cols-1 gap-2">
-                                                         
-                                                         {/* FIXED: Directly prints the question text from the database */}
-                                                         {Object.entries(viewPlayer.Trials[0].checklist_answers).map(([questionText, ans]) => (
+                                            {viewPlayer.Trials[0].checklist_answers && Object.keys(viewPlayer.Trials[0].checklist_answers).length > 0 && (
+                                                <div className="mb-6 pb-6 border-b border-emerald-200/50">
+                                                    <span className="text-emerald-800 block text-xs uppercase font-bold mb-3">Manager Checklist Results</span>
+                                                    <div className="grid grid-cols-1 gap-2">
+                                                        {Object.entries(viewPlayer.Trials[0].checklist_answers).map(([questionText, ans]) => (
                                                             <div key={questionText} className="bg-white/60 p-3 rounded-lg border border-emerald-100 flex justify-between items-center shadow-sm gap-4">
-                                                               <span className="text-slate-700 text-sm font-medium flex-1 leading-snug">
-                                                                  {questionText}
-                                                               </span>
-                                                               <span className={`text-sm font-bold px-3 py-1 rounded-md shrink-0 ${ans === 'Yes' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                                                                  {ans}
-                                                               </span>
+                                                                <span className="text-slate-700 text-sm font-medium flex-1 leading-snug">
+                                                                    {questionText}
+                                                                </span>
+                                                                <span className={`text-sm font-bold px-3 py-1 rounded-md shrink-0 ${ans === 'Yes' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                                                    {ans}
+                                                                </span>
                                                             </div>
-                                                         ))}
-                                                         
-                                                      </div>
-                                                   </div>
-                                                )}
-
-                                                {/* 3. Medical Notes & Live Photo */}
-                                                <div className="flex flex-col sm:flex-row gap-4">
-                                                   
-                                                   {/* Medical Notes */}
-                                                   <div className="flex-1 bg-white/60 p-4 rounded-xl border border-emerald-100 shadow-sm">
-                                                      <span className="text-emerald-800 block text-xs uppercase font-bold mb-2">Manager Medical Notes</span>
-                                                      <p className="text-slate-700 text-sm font-medium leading-relaxed">
-                                                         {viewPlayer.Trials[0].medical_checklist || "No additional medical notes provided by manager."}
-                                                      </p>
-                                                   </div>
-
-                                                   {/* Live Trial Photo */}
-                                                   {viewPlayer.Trials[0].trial_photo_url && (
-                                                      <div className="shrink-0 flex flex-col items-center">
-                                                         <span className="text-emerald-800 block text-xs uppercase font-bold mb-2 w-full text-center">Live Capture</span>
-                                                         <a href={getDriveImageUrl(viewPlayer.Trials[0].trial_photo_url)} target="_blank" rel="noreferrer" className="block transform hover:scale-105 transition-transform">
-                                                            
-                                                            {/* CHANGED: Increased from w-24 h-24 to w-48 h-48 for a much larger photo */}
-                                                            <img 
-                                                               src={getDriveImageUrl(viewPlayer.Trials[0].trial_photo_url)} 
-                                                               alt="Trial Live Capture" 
-                                                               className="w-48 h-48 object-cover rounded-xl border-4 border-white shadow-lg" 
-                                                               onError={(e) => {
-                                                                  if (!e.target.dataset.retried) {
-                                                                     e.target.dataset.retried = "true"; 
-                                                                     setTimeout(() => {
-                                                                        e.target.src = `${getDriveImageUrl(viewPlayer.Trials[0].trial_photo_url)}?retry=${Date.now()}`;
-                                                                     }, 3000);
-                                                                  } else {
-                                                                     e.target.src = "https://placehold.co/300x300?text=No+Photo";
-                                                                  }
-                                                               }} 
-                                                            />
-
-                                                         </a>
-                                                      </div>
-                                                   )}
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            </section>
-                                        )}
-                                    </div>
+                                            )}
+
+                                            <div className="flex flex-col sm:flex-row gap-4">
+                                                <div className="flex-1 bg-white/60 p-4 rounded-xl border border-emerald-100 shadow-sm">
+                                                    <span className="text-emerald-800 block text-xs uppercase font-bold mb-2">Manager Medical Notes</span>
+                                                    <p className="text-slate-700 text-sm font-medium leading-relaxed">
+                                                        {viewPlayer.Trials[0].medical_checklist || "No additional medical notes provided by manager."}
+                                                    </p>
+                                                </div>
+
+                                                {viewPlayer.Trials[0].trial_photo_url && (
+                                                    <div className="shrink-0 flex flex-col items-center">
+                                                        <span className="text-emerald-800 block text-xs uppercase font-bold mb-2 w-full text-center">Live Capture</span>
+                                                        <a href={getDriveImageUrl(viewPlayer.Trials[0].trial_photo_url)} target="_blank" rel="noreferrer" className="block transform hover:scale-105 transition-transform">
+                                                            <img
+                                                                src={getDriveImageUrl(viewPlayer.Trials[0].trial_photo_url)}
+                                                                alt="Trial Live Capture"
+                                                                className="w-48 h-48 object-cover rounded-xl border-4 border-white shadow-lg"
+                                                                onError={(e) => {
+                                                                    if (!e.target.dataset.retried) {
+                                                                        e.target.dataset.retried = "true";
+                                                                        setTimeout(() => {
+                                                                            e.target.src = `${getDriveImageUrl(viewPlayer.Trials[0].trial_photo_url)}?retry=${Date.now()}`;
+                                                                        }, 3000);
+                                                                    } else {
+                                                                        e.target.src = "https://placehold.co/300x300?text=No+Photo";
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </a>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </section>
+                                    )}
                                 </div>
                             </div>
-{/* Modal Footer (Sticky) */}
-                            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 rounded-b-2xl">
-                                
-                                {/* Dropdown for Status Selection */}
-                                <div className="flex items-center gap-3 w-full sm:w-auto">
-                                    <label className="text-sm font-bold text-slate-700 uppercase tracking-wide">Action:</label>
-                                    <select
-                                        value={actionStatus}
-                                        onChange={(e) => setActionStatus(e.target.value)}
-                                        className="border border-slate-300 rounded-xl p-2.5 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 min-w-[180px] shadow-sm cursor-pointer bg-white"
-                                    >
-                                        <option value="" disabled>-- Select Status --</option>
-                                        <option value="Registered" className="text-emerald-600 font-bold">Approve Player</option>
-                                        <option value="Pending" className="text-blue-600 font-bold">Pending</option>
-                                        <option value="Hold" className="text-amber-600 font-bold">Hold</option>
-                                        <option value="Rejected" className="text-rose-600 font-bold">Reject</option>
-                                        <option value="Blacklisted" className="text-slate-900 font-bold">Blacklist</option>
-                                    </select>
-                                </div>
+                        </div>
 
-                                {/* Action Buttons */}
-                                <div className="flex gap-3 w-full sm:w-auto">
-                                    <button
-                                        onClick={() => {
-                                            setViewPlayer(null);
-                                            setActionStatus(""); // reset on close
-                                        }}
-                                        className="flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={() => handleUpdateStatus(viewPlayer.id)}
-                                        className="flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 shadow-lg transition-all active:scale-95"
-                                    >
-                                        Submit Action
-                                    </button>
-                                </div>
+                        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 rounded-b-2xl">
+                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <label className="text-sm font-bold text-slate-700 uppercase tracking-wide">Action:</label>
+                                <select value={actionStatus} onChange={(e) => setActionStatus(e.target.value)} className="border border-slate-300 rounded-xl p-2.5 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 min-w-[180px] shadow-sm cursor-pointer bg-white">
+                                    <option value="" disabled>-- Select Status --</option>
+                                    <option value="Registered" className="text-emerald-600">Approve Player</option>
+                                    <option value="Pending" className="text-blue-600">Pending</option>
+                                    <option value="Hold" className="text-amber-600">Hold</option>
+                                    <option value="Rejected" className="text-rose-600">Reject</option>
+                                    <option value="Blacklisted" className="text-slate-900">Blacklist</option>
+                                </select>
                             </div>
-
+                            <div className="flex gap-3 w-full sm:w-auto">
+                                <button onClick={() => { setViewPlayer(null); setActionStatus(""); }} className="flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 transition-colors">Cancel</button>
+                                <button onClick={() => handleUpdateStatus(viewPlayer.id)} className="flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 shadow-lg transition-all active:scale-95">Submit Action</button>
+                            </div>
                         </div>
                     </div>
-                )}
+                </div>
+            )}
+        </div>
+    );
+};
+
+/* =========================================================================
+   2. DASHBOARD HOME
+========================================================================= */
+const DashboardHome = ({ setActiveTab }) => {
+    const [stats, setStats] = useState({
+        counts: { totalPlayers: 0, pendingApps: 0, activeCoaches: 0, pendingTeams: 0 },
+        recentApplications: []
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const res = await API.get('/admin/dashboard-stats');
+                setStats(res.data);
+            } catch (err) {
+                console.error("Dashboard fetch error:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchDashboardData();
+    }, []);
+
+    const statCards = [
+        { title: "Total Players", count: stats.counts.totalPlayers, icon: <Users className="w-6 h-6 text-blue-500" />, color: "border-blue-500", tab: "Players" },
+        { title: "Pending Apps", count: stats.counts.pendingApps, icon: <FileText className="w-6 h-6 text-emerald-500" />, color: "border-emerald-500", tab: "Applications" },
+        { title: "Active Coaches", count: stats.counts.activeCoaches, icon: <UserCog className="w-6 h-6 text-purple-500" />, color: "border-purple-500", tab: "Coach Management" },
+        { title: "Teams Pending", count: stats.counts.pendingTeams, icon: <Shield className="w-6 h-6 text-amber-500" />, color: "border-amber-500", tab: "Teams" }
+    ];
+
+    return (
+        <div className="animate-in fade-in duration-500 space-y-6">
+            <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-6">Overview Dashboard</h1>
+
+            {/* Stat Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                {statCards.map((stat, i) => (
+                    <div 
+                        key={i} 
+                        onClick={() => setActiveTab(stat.tab)}
+                        className={`bg-white rounded-2xl p-6 shadow-sm border border-slate-100 border-t-4 ${stat.color} hover:shadow-md transition-all cursor-pointer active:scale-95`}
+                    >
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-slate-500 font-semibold text-xs md:text-sm mb-1">{stat.title}</p>
+                                <h3 className="text-2xl md:text-3xl font-bold text-slate-900">
+                                    {loading ? "..." : stat.count}
+                                </h3>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded-xl">{stat.icon}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-4 md:p-6">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4">Recent Applications</h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="text-xs text-slate-500 uppercase bg-slate-50">
+                                <tr>
+                                    <th className="px-4 py-3">Player</th>
+                                    <th className="px-4 py-3">Team</th>
+                                    <th className="px-4 py-3">Status</th>
+                                    <th className="px-4 py-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {stats.recentApplications.map((player) => (
+                                    <tr key={player.id} className="hover:bg-slate-50 transition-colors">
+                                        <td className="px-4 py-3 font-semibold text-slate-900">{player.full_name}</td>
+                                        <td className="px-4 py-3 text-slate-600">{player.Club?.name || "Indep."}</td>
+                                        <td className="px-4 py-3">
+                                            <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-[10px] font-bold uppercase">
+                                                {player.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <button onClick={() => setActiveTab("Applications")} className="text-emerald-600 font-bold">Review</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+                    <h3 className="text-lg font-bold text-slate-900 mb-2">Quick Actions</h3>
+                    <button 
+                        onClick={() => setActiveTab("Coach Management")}
+                        className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-colors text-slate-700 font-semibold group"
+                    >
+                        <span className="flex items-center gap-3"><UserPlus className="w-5 h-5 text-emerald-600" /> Create Coach Profile</span>
+                        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-600" />
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab("Teams")}
+                        className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-colors text-slate-700 font-semibold group"
+                    >
+                        <span className="flex items-center gap-3"><Shield className="w-5 h-5 text-blue-600" /> View Pending Teams</span>
+                        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-blue-600" />
+                    </button>
+                </div>
             </div>
         </div>
     );
 };
 
-export default AdminDashboard;
+/* =========================================================================
+   3. MAIN LAYOUT SHELL (WITH NOTIFICATION BADGES)
+========================================================================= */
+export default function AdminControlPanel() {
+    const [activeTab, setActiveTab] = useState("Dashboard");
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    
+    // 🌟 1. State to hold the live counts for the sidebar badges
+    const [sidebarBadges, setSidebarBadges] = useState({
+        "Applications": 0,
+        "Teams": 0,
+        "Notifications": 0
+    });
+
+    // 🌟 2. Automatically fetch badge counts every 30 seconds
+    useEffect(() => {
+        const fetchBadges = async () => {
+            try {
+                const res = await API.get('/admin/dashboard-stats');
+                setSidebarBadges({
+                    "Applications": res.data.counts.pendingApps || 0,
+                    "Teams": res.data.counts.pendingTeams || 0,
+                    "Notifications": res.data.counts.unreadNotifications || 0
+                });
+            } catch (error) {
+                console.error("Error fetching sidebar badges", error);
+            }
+        };
+
+        fetchBadges(); // Run immediately
+        const interval = setInterval(fetchBadges, 30000); // Check every 30 seconds
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem("currentUser");
+        window.location.href = "/login";
+    };
+
+    const navItems = [
+        { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { id: "User Management", label: "User Management", icon: Users },
+        { id: "Players", label: "Players Directory", icon: UserPlus },
+        { id: "Applications", label: "Applications", icon: FileText },
+        { id: "Coach Management", label: "Coach Management", icon: UserCog },
+        { id: "Teams", label: "Teams", icon: Shield },
+        { id: "Tournaments", label: "Tournaments", icon: Trophy },
+        { id: "Referee Management", label: "Referee Management", icon: Flag },
+        { id: "Notifications", label: "Notifications", icon: Bell },
+    ];
+
+    const renderContent = () => {
+        switch (activeTab) {
+            case "Dashboard": return <DashboardHome setActiveTab={setActiveTab} />;
+            case "Applications": return <ApplicationsView />;
+            case "User Management": return <UsersPage />;
+            case "Players": return <PlayersPage />;
+            case "Coach Management": return <CoachManagement />;
+            case "Teams": return < TeamsPage/>;
+            case "Tournaments": return < TournamentsPage/>;
+            case "Referee Management": return <RefereePage />;
+            case "Notifications": return <NotificationsPage/>;
+            default: return <DashboardHome setActiveTab={setActiveTab} />;
+        }
+    };
+
+    return (
+        <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
+            <aside className={`
+                fixed lg:static inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none flex flex-col
+                ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+            `}>
+                <div className="h-20 flex items-center justify-between px-6 border-b border-slate-800">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                            <Shield className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-xl font-extrabold tracking-tight">Admin<span className="text-emerald-400">Pro</span></span>
+                    </div>
+                    <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+
+                <nav className="flex-1 overflow-y-auto py-6 px-4 custom-scrollbar space-y-1">
+                    <div className="px-3 mb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Platform Modules</div>
+                    {navItems.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = activeTab === item.id;
+                        
+                        // 🌟 3. Check if this specific tab has a badge count > 0
+                        const badgeCount = sidebarBadges[item.id] || 0;
+
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }}
+                                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
+                                        ? "bg-emerald-600/10 text-emerald-400 font-bold"
+                                        : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-100 font-medium"
+                                    }`}
+                            >
+                                <Icon className={`w-5 h-5 shrink-0 ${isActive ? "text-emerald-400" : "text-slate-500 group-hover:text-emerald-400 transition-colors"}`} />
+                                <span className="flex-1 text-left truncate">{item.label}</span>
+                                
+                                {/* 🌟 4. Display the Red Notification Pill */}
+                                {badgeCount > 0 && (
+                                    <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm shrink-0 animate-in zoom-in duration-300">
+                                        {badgeCount > 99 ? "99+" : badgeCount}
+                                    </span>
+                                )}
+
+                                {/* Green active indicator bar */}
+                                {isActive && badgeCount === 0 && <div className="ml-auto w-1.5 h-6 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] shrink-0"></div>}
+                            </button>
+                        );
+                    })}
+                </nav>
+
+                <div className="p-4 border-t border-slate-800">
+                    <div className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                        <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-slate-700">
+                            A
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                            <p className="text-sm font-bold text-white truncate">Super Admin</p>
+                            <p className="text-xs text-slate-400 truncate">admin@platform.com</p>
+                        </div>
+                        <button 
+                            onClick={handleLogout}
+                            title="Logout"
+                            className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-700/50 rounded-lg transition-colors group"
+                        >
+                            <LogOut className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+                <header className="lg:hidden h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 z-30">
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                            <Menu className="w-6 h-6" />
+                        </button>
+                        <span className="font-extrabold text-slate-900 text-lg">Admin<span className="text-emerald-500">Pro</span></span>
+                    </div>
+                    <button 
+                        onClick={handleLogout}
+                        className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors flex items-center"
+                    >
+                        <LogOut className="w-6 h-6" />
+                    </button>
+                </header>
+
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+                    {renderContent()}
+                </div>
+            </main>
+        </div>
+    );
+}
