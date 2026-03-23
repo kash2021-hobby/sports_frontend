@@ -60,7 +60,7 @@ export default function ManagerDashboard({ clubId = 1 }) {
                         <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
                             <Menu className="w-6 h-6" />
                         </button>
-                        <span className="font-extrabold text-slate-900 text-lg">Coach<span className="text-emerald-500">Pro</span></span>
+                        <span className="font-extrabold text-slate-900 text-lg">Secretary<span className="text-emerald-500">Pro</span></span>
                     </div>
                     <button onClick={handleLogout} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors flex items-center">
                         <LogOut className="w-6 h-6" />
