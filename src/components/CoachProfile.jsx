@@ -10,8 +10,8 @@ export default function CoachProfile() {
                 <div className="bg-slate-900 p-8 text-white flex items-center gap-6">
                     <div className="w-24 h-24 bg-emerald-500 rounded-full border-4 border-slate-800 flex items-center justify-center text-3xl font-bold">M</div>
                     <div>
-                        <h1 className="text-3xl font-extrabold tracking-tight">Manager Name</h1>
-                        <p className="text-emerald-400 font-semibold mt-1">Head Coach • FC Academy</p>
+                        <h1 className="text-3xl font-extrabold tracking-tight">Secretary Name</h1>
+                        <p className="text-emerald-400 font-semibold mt-1">Head Secretary</p>
                     </div>
                 </div>
 
@@ -27,7 +27,7 @@ export default function CoachProfile() {
                     {activeTab === 'About' && (
                         <div className="grid grid-cols-2 gap-6 animate-in fade-in">
                             <div><p className="text-xs font-bold text-slate-400 uppercase">Phone</p><p className="font-bold text-slate-900">+91 9876543210</p></div>
-                            <div><p className="text-xs font-bold text-slate-400 uppercase">Role</p><p className="font-bold text-slate-900">Head Coach</p></div>
+                            <div><p className="text-xs font-bold text-slate-400 uppercase">Role</p><p className="font-bold text-slate-900">Head Secretary</p></div>
                             <div><p className="text-xs font-bold text-slate-400 uppercase">Experience</p><p className="font-bold text-slate-900">5 Years</p></div>
                         </div>
                     )}
