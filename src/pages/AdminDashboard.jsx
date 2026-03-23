@@ -193,7 +193,7 @@ const ApplicationsView = () => {
                                             <div className="flex justify-between items-start mb-6">
                                                 <div>
                                                     <h3 className="text-xl font-bold text-emerald-900">Trial Evaluation</h3>
-                                                    <p className="text-xs font-semibold text-emerald-700 mt-1">Submitted by Club Manager</p>
+                                                    <p className="text-xs font-semibold text-emerald-700 mt-1">Submitted by Club Secretary</p>
                                                 </div>
                                                 <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm ${viewPlayer.Trials[0].recommendation ? 'bg-emerald-600 text-white' : 'bg-rose-500 text-white'}`}>
                                                     {viewPlayer.Trials[0].recommendation ? "Recommended" : "Not Recommended"}
@@ -225,7 +225,7 @@ const ApplicationsView = () => {
 
                                             {viewPlayer.Trials[0].checklist_answers && Object.keys(viewPlayer.Trials[0].checklist_answers).length > 0 && (
                                                 <div className="mb-6 pb-6 border-b border-emerald-200/50">
-                                                    <span className="text-emerald-800 block text-xs uppercase font-bold mb-3">Manager Checklist Results</span>
+                                                    <span className="text-emerald-800 block text-xs uppercase font-bold mb-3">Secretary Checklist Results</span>
                                                     <div className="grid grid-cols-1 gap-2">
                                                         {Object.entries(viewPlayer.Trials[0].checklist_answers).map(([questionText, ans]) => (
                                                             <div key={questionText} className="bg-white/60 p-3 rounded-lg border border-emerald-100 flex justify-between items-center shadow-sm gap-4">
@@ -243,7 +243,7 @@ const ApplicationsView = () => {
 
                                             <div className="flex flex-col sm:flex-row gap-4">
                                                 <div className="flex-1 bg-white/60 p-4 rounded-xl border border-emerald-100 shadow-sm">
-                                                    <span className="text-emerald-800 block text-xs uppercase font-bold mb-2">Manager Medical Notes</span>
+                                                    <span className="text-emerald-800 block text-xs uppercase font-bold mb-2">Secretary Medical Notes</span>
                                                     <p className="text-slate-700 text-sm font-medium leading-relaxed">
                                                         {viewPlayer.Trials[0].medical_checklist || "No additional medical notes provided by manager."}
                                                     </p>
@@ -397,7 +397,7 @@ const DashboardHome = ({ setActiveTab }) => {
                         onClick={() => setActiveTab("Coach Management")}
                         className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-colors text-slate-700 font-semibold group"
                     >
-                        <span className="flex items-center gap-3"><UserPlus className="w-5 h-5 text-emerald-600" /> Create Coach Profile</span>
+                        <span className="flex items-center gap-3"><UserPlus className="w-5 h-5 text-emerald-600" /> Create Secretary Profile</span>
                         <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-600" />
                     </button>
                     <button 
