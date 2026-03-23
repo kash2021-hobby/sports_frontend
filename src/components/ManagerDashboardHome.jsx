@@ -15,14 +15,14 @@ export default function ManagerDashboardHome({ setActiveTab, clubId }) {
     const fetchDashboardData = async () => {
         try {
             // 1. Fetch all players applied to this club
-            const playersRes = await fetch(`http://localhost:5000/clubs/applications?club_id=${clubId}`);
+            const playersRes = await fetch(`https://backend.dhsa.co.in/clubs/applications?club_id=${clubId}`);
             let playersData = [];
             if (playersRes.ok) {
                 playersData = await playersRes.json();
             }
 
             // 2. Fetch the permanent team status for this club
-            const teamRes = await fetch(`http://localhost:5000/manager/team/${clubId}`);
+            const teamRes = await fetch(`https://backend.dhsa.co.in/manager/team/${clubId}`);
             let teamCount = 0;
             if (teamRes.ok) {
                 const teamData = await teamRes.json();
