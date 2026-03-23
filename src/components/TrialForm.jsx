@@ -33,7 +33,7 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
    useEffect(() => {
       const fetchQuestions = async () => {
          try {
-            const res = await fetch(`http://localhost:5000/manager/questions/${clubId}`);
+            const res = await fetch(`https://backend.dhsa.co.in/manager/questions/${clubId}`);
             if (res.ok) {
                const data = await res.json();
                setLocalQuestions(data);
@@ -146,7 +146,7 @@ const TrialForm = ({ player, clubId, questions = [], onClose, onSuccess }) => {
       }
 
       try {
-         const response = await fetch("http://localhost:5000/trial/evaluate", {
+         const response = await fetch("https://backend.dhsa.co.in/trial/evaluate", {
             method: "POST",
             body: formData,
          });
