@@ -36,7 +36,7 @@ export default function RefereeDashboard({ user }) {
 
     const fetchMatches = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/referee/${user.id}/matches`);
+            const res = await fetch(`https://backend.dhsa.co.in/${user.id}/matches`);
             const data = await res.json();
             if (res.ok) {
                 // Sort matches so recently assigned are at the top
