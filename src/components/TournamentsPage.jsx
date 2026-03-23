@@ -32,7 +32,7 @@ export default function TournamentsPage() {
 
     const fetchTournaments = async () => {
         try {
-            const res = await fetch("http://localhost:5000/tournaments");
+            const res = await fetch("https://backend.dhsa.co.in/tournaments");
             if (res.ok) setTournaments(await res.json());
         } catch (error) { console.error("Error fetching:", error); }
         finally { setLoading(false); }
@@ -77,7 +77,7 @@ export default function TournamentsPage() {
         }
 
         try {
-            const res = await fetch(`http://localhost:5000/admin/tournaments/${id}`, {
+            const res = await fetch(`https://backend.dhsa.co.in/admin/tournaments/${id}`, {
                 method: 'DELETE'
             });
 
@@ -116,7 +116,7 @@ export default function TournamentsPage() {
         if (qrFile) submitData.append('qr_code_file', qrFile);
 
         try {
-            const res = await fetch("http://localhost:5000/admin/tournaments", {
+            const res = await fetch("https://backend.dhsa.co.in/admin/tournaments", {
                 method: "POST",
                 body: submitData
             });
