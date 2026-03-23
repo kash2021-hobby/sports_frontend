@@ -34,7 +34,7 @@ export default function RefereePage() {
 
     const fetchReferees = async () => {
         try {
-            const res = await fetch('http://localhost:5000/admin/referees');
+            const res = await fetch('https://backend.dhsa.co.in/admin/referees');
             if (res.ok) setReferees(await res.json());
         } catch (error) {
             console.error("Error fetching referees:", error);
@@ -61,7 +61,7 @@ export default function RefereePage() {
         setIsSubmitting(true);
 
         const isEditing = !!formData.id;
-        const url = isEditing ? `http://localhost:5000/admin/referees/${formData.id}` : 'http://localhost:5000/admin/referees';
+        const url = isEditing ? `https://backend.dhsa.co.in/admin/referees/${formData.id}` : 'https://backend.dhsa.co.in/admin/referees';
         const method = isEditing ? 'PUT' : 'POST';
 
         // Use FormData because we are sending a file!
@@ -92,7 +92,7 @@ export default function RefereePage() {
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this referee?")) return;
         try {
-            const res = await fetch(`http://localhost:5000/admin/referees/${id}`, { method: 'DELETE' });
+            const res = await fetch(`https://backend.dhsa.co.in/admin/referees/${id}`, { method: 'DELETE' });
             if (res.ok) fetchReferees();
         } catch (error) { alert("Error deleting referee"); }
     };
