@@ -14,7 +14,7 @@ export default function NotificationsPage() {
 
     const fetchRegistrations = async () => {
         try {
-            const res = await fetch("http://localhost:5000/admin/tournament-registrations");
+            const res = await fetch("https://backend.dhsa.co.in/admin/tournament-registrations");
             if (res.ok) setRegistrations(await res.json());
         } catch (error) {
             console.error("Failed to fetch registrations:", error);
@@ -30,7 +30,7 @@ export default function NotificationsPage() {
         }
 
         try {
-            const res = await fetch(`http://localhost:5000/admin/tournament-registrations/${id}/status`, {
+            const res = await fetch(`https://backend.dhsa.co.in/admin/tournament-registrations/${id}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })
