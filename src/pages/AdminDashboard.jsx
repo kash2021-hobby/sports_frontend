@@ -47,7 +47,7 @@ const ApplicationsView = () => {
         if (!window.confirm(`Are you sure you want to mark this player as ${actionStatus}?`)) return;
 
         try {
-            const response = await fetch("http://localhost:5000/admin/update-status", {
+            const response = await fetch("https://backend.dhsa.co.in/admin/update-status", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ player_id: id, status: actionStatus })
