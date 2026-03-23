@@ -24,7 +24,7 @@ export default function TeamsPage({ clubId }) {
     const fetchTeamData = async () => {
         try {
             // Mock API call - Replace with your actual endpoint
-            const res = await fetch(`http://localhost:5000/manager/team/${clubId}`);
+            const res = await fetch(`https://backend.dhsa.co.in/manager/team/${clubId}`);
             if (res.ok) {
                 const data = await res.json();
                 setExistingTeam(data); // If null, no team exists
@@ -39,7 +39,7 @@ export default function TeamsPage({ clubId }) {
     const fetchApprovedPlayers = async () => {
         try {
             // Fetch players for this club who are 'Registered' (Approved by Admin)
-            const res = await fetch(`http://localhost:5000/clubs/applications?club_id=${clubId}`);
+            const res = await fetch(`https://backend.dhsa.co.in/clubs/applications?club_id=${clubId}`);
             if (res.ok) {
                 const data = await res.json();
                 // Filter only approved players ready to be put in a team
@@ -111,7 +111,7 @@ export default function TeamsPage({ clubId }) {
 
         try {
             // Replace with actual POST endpoint
-            const res = await fetch("http://localhost:5000/manager/team", {
+            const res = await fetch("https://backend.dhsa.co.in/manager/team", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
