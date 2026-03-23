@@ -18,7 +18,7 @@ export default function TeamsPage() {
 
     const fetchTeams = async () => {
         try {
-            const res = await fetch("http://localhost:5000/admin/teams");
+            const res = await fetch("https://backend.dhsa.co.in/admin/teams");
             if (res.ok) {
                 const data = await res.json();
                 setTeams(data);
@@ -35,7 +35,7 @@ export default function TeamsPage() {
         
         setIsProcessing(true);
         try {
-            const res = await fetch(`http://localhost:5000/admin/teams/${teamId}/approve`, {
+            const res = await fetch(`https://backend.dhsa.co.in/admin/teams/${teamId}/approve`, {
                 method: 'PUT',
                 headers: { "Content-Type": "application/json" }
             });
