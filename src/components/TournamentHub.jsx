@@ -93,7 +93,7 @@ export default function TournamentHub({ clubId }) {
         }
 
         try {
-            const res = await fetch("http://localhost:5000/manager/tournaments/register", {
+            const res = await fetch("https://backend.dhsa.co.in/manager/tournaments/register", {
                 method: "POST",
                 body: formData
             });
