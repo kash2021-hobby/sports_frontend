@@ -127,7 +127,7 @@ export default function RefereeDashboard({ user }) {
         if (!window.confirm("End match and lock final score?")) return;
         setIsRunning(false);
         try {
-            const res = await fetch(`http://localhost:5000/referee/matches/${liveMatch.id}/complete`, {
+            const res = await fetch(`https://backend.dhsa.co.in/referee/matches/${liveMatch.id}/complete`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
