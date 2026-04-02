@@ -16,7 +16,6 @@ export default function RefereeDashboard({ user }) {
     const [subOffPlayer, setSubOffPlayer] = useState("");
     const [subOnPlayer, setSubOnPlayer] = useState("");
     
-    // 🌟 NEW: State to track which tab is active
     const [activeFilter, setActiveFilter] = useState('All');
 
     useEffect(() => {
@@ -36,17 +35,20 @@ export default function RefereeDashboard({ user }) {
 
     const fetchMatches = async () => {
         try {
-            const res = await fetch(`https://backend.dhsa.co.in/${user.id}/matches`);
+            const res = await fetch(`https://backend.dhsa.co.in/referee/${user.id}/matches`);
             const data = await res.json();
+            
+            console.log("Raw Backend Data:", data); 
+
             if (res.ok) {
-                // Sort matches so recently assigned are at the top
-                const sortedMatches = data.sort((a, b) => b.id - a.id);
+                const matchArray = Array.isArray(data) ? data : (data.results || data.matches || []);
+                const sortedMatches = [...matchArray].sort((a, b) => b.id - a.id);
                 setMatches(sortedMatches);
             } else {
-                console.error("Backend Error:", data.error);
+                console.error("Backend Error:", data);
             }
         } catch (error) {
-            console.error("Error fetching matches", error);
+            console.error("Error fetching matches:", error);
         } finally {
             setLoading(false);
         }
@@ -55,7 +57,7 @@ export default function RefereeDashboard({ user }) {
     const handleLogout = () => {
         if (window.confirm("Are you sure you want to log out?")) {
             localStorage.removeItem('currentUser');
-            window.location.href = '/login'; // 🌟 FIXED: Forces a hard redirect and memory clear!
+            window.location.href = '/login'; 
         }
     };
 
@@ -71,7 +73,20 @@ export default function RefereeDashboard({ user }) {
 
     const hasMatchStarted = isRunning || timeInSeconds > 0;
 
-    const handleStartMatch = (match) => {
+    const handleStartMatch = async (match) => {
+        try {
+            const res = await fetch(`https://backend.dhsa.co.in/admin/matches/${match.id}/toggle-live`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (!res.ok) {
+                console.error("Failed to sync live status to server");
+            }
+        } catch (error) {
+            console.error("Network error syncing live status:", error);
+        }
+
         setLiveMatch(match);
         setTimeInSeconds(0);
         setEvents([]);
@@ -79,7 +94,28 @@ export default function RefereeDashboard({ user }) {
         setIsRunning(false);
     };
 
-    const handleAddStandardEvent = (playerId, playerName) => {
+    // 🌟 HELPER FUNCTION: Syncs scores AND timeline events to the database instantly
+    const syncLiveToDatabase = async (updatedEventsList) => {
+        const newTeam1Score = updatedEventsList.filter(e => e.type === 'Goal' && e.teamId === liveMatch?.Team1?.id).length;
+        const newTeam2Score = updatedEventsList.filter(e => e.type === 'Goal' && e.teamId === liveMatch?.Team2?.id).length;
+
+        try {
+            await fetch(`https://backend.dhsa.co.in/admin/matches/${liveMatch.id}/update-score`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    team1_score: newTeam1Score, 
+                    team2_score: newTeam2Score,
+                    match_events: updatedEventsList // Sends the full timeline!
+                })
+            });
+        } catch (error) {
+            console.error("Live sync error:", error);
+        }
+    };
+
+    // 🌟 UPDATED: Handle Goals, Yellow Cards, Red Cards
+    const handleAddStandardEvent = async (playerId, playerName) => {
         const newEvent = {
             id: Date.now(),
             minute: currentMinute,
@@ -88,11 +124,17 @@ export default function RefereeDashboard({ user }) {
             playerId,
             playerName
         };
-        setEvents([newEvent, ...events]); 
+
+        const updatedEvents = [newEvent, ...events];
+        setEvents(updatedEvents); 
         closeModal();
+
+        // Instantly push to database
+        await syncLiveToDatabase(updatedEvents);
     };
 
-    const handleAddSubstitution = () => {
+    // 🌟 UPDATED: Handle Substitutions
+    const handleAddSubstitution = async () => {
         if (!subOffPlayer || !subOnPlayer) {
             alert("Please select both players.");
             return;
@@ -113,8 +155,12 @@ export default function RefereeDashboard({ user }) {
             playerOnName: playerOn.full_name
         };
         
-        setEvents([newEvent, ...events]);
+        const updatedEvents = [newEvent, ...events];
+        setEvents(updatedEvents);
         closeModal();
+
+        // Instantly push to database
+        await syncLiveToDatabase(updatedEvents);
     };
 
     const closeModal = () => {
@@ -146,7 +192,6 @@ export default function RefereeDashboard({ user }) {
         }
     };
 
-    // Group matches by their type
     const groupedMatches = {
         'Knockout': [],
         'League': [],
@@ -162,7 +207,6 @@ export default function RefereeDashboard({ user }) {
         }
     });
 
-    // 🌟 NEW: Calculate which tabs should be visible based on actual assigned matches
     const availableTypes = Object.keys(groupedMatches).filter(type => groupedMatches[type].length > 0);
 
     if (loading) return <div className="p-8 text-slate-500 font-medium animate-pulse">Loading Duty Desk...</div>;
@@ -183,7 +227,7 @@ export default function RefereeDashboard({ user }) {
             <main className="flex-1 p-4 md:p-8">
                 {liveMatch ? (
                     <div className="animate-in fade-in duration-500 max-w-6xl mx-auto space-y-6 pb-20">
-                        {/* Live Match UI goes here (Unchanged from before) */}
+                        {/* Live Match UI goes here */}
                         <div className="bg-slate-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-slate-800 text-white relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-4 opacity-10"><Activity className="w-48 h-48 animate-pulse"/></div>
                             <div className="text-center mb-6">
@@ -261,7 +305,6 @@ export default function RefereeDashboard({ user }) {
                             <p className="text-slate-500 font-medium mt-1">Select a match to launch the live referee controller.</p>
                         </header>
                         
-                        {/* 🌟 NEW: THE FILTER TABS */}
                         {availableTypes.length > 0 && (
                             <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
                                 <button 
@@ -291,7 +334,6 @@ export default function RefereeDashboard({ user }) {
                                 <p className="font-bold text-lg">No matches assigned to you yet.</p>
                             </div>
                         ) : (
-                            // Filter and Map groups
                             Object.entries(groupedMatches)
                                 .filter(([matchType]) => activeFilter === 'All' || activeFilter === matchType)
                                 .map(([matchType, typeMatches]) => {
@@ -299,7 +341,6 @@ export default function RefereeDashboard({ user }) {
                                     return (
                                         <div key={matchType} className="space-y-6 animate-in fade-in duration-300">
                                             
-                                            {/* Display Section Header only if "All" is selected to separate them */}
                                             {activeFilter === 'All' && (
                                                 <div className="flex items-center gap-3 border-b-2 border-slate-200 pb-2 mt-4">
                                                     <Trophy className="w-5 h-5 text-emerald-500" />
@@ -313,7 +354,6 @@ export default function RefereeDashboard({ user }) {
                                                         
                                                         <div className="flex justify-between items-center mb-4">
                                                             <div className="flex items-center gap-2">
-                                                                {/* Shows a tiny grey match type badge if filtered to "All" so the ref knows what it is */}
                                                                 {activeFilter === 'All' && <span className="bg-slate-100 text-slate-400 px-2 py-1 text-[10px] font-black uppercase tracking-wider rounded-md">{matchType}</span>}
                                                                 <span className="bg-slate-100 text-slate-600 px-3 py-1 text-xs font-black uppercase tracking-wider rounded-full">{match.round_name}</span>
                                                             </div>
