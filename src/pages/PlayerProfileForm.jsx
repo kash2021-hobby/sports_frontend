@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { playerAPI, adminAPI } from "../services/api"; 
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react"; // 🌟 NEW: Imported Logout Icon
 
 const PlayerProfileForm = () => {
     const navigate = useNavigate();
@@ -12,6 +11,9 @@ const PlayerProfileForm = () => {
 
     const [loading, setLoading] = useState(false);
     const [clubs, setClubs] = useState([]); 
+    
+    // 🌟 NEW: State to track if the mandatory declaration is checked
+    const [declarationAccepted, setDeclarationAccepted] = useState(false);
 
     const [formData, setFormData] = useState({
         full_name: "",
@@ -73,16 +75,6 @@ const PlayerProfileForm = () => {
     }, [playerId, navigate]);
 
     /* ===============================
-       LOGOUT FUNCTION
-    ================================ */
-    const handleLogout = () => {
-        if (window.confirm("Are you sure you want to log out? Any unsaved changes will be lost.")) {
-            localStorage.removeItem('currentUser');
-            window.location.href = '/login'; // 🌟 Forces a hard refresh to clear memory
-        }
-    };
-
-    /* ===============================
        HANDLE TEXT INPUT
     ================================ */
     const handleChange = (e) => {
@@ -109,6 +101,13 @@ const PlayerProfileForm = () => {
     ================================ */
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Final safety check just in case
+        if (!declarationAccepted) {
+            alert("You must accept the declaration before submitting.");
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -146,18 +145,8 @@ const PlayerProfileForm = () => {
         <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
             <div className="max-w-4xl mx-auto">
                 
-                {/* --- HEADER WITH LOGOUT BUTTON --- */}
-                <header className="mb-10 relative text-center bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                    
-                    {/* 🌟 NEW: Logout Button */}
-                    <button 
-                        onClick={handleLogout}
-                        className="absolute top-6 right-6 flex items-center gap-2 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 px-4 py-2.5 rounded-xl text-sm font-bold transition-colors shadow-sm border border-rose-100"
-                    >
-                        <LogOut className="w-4 h-4" /> 
-                        <span className="hidden sm:inline">Logout</span>
-                    </button>
-
+                {/* --- HEADER --- */}
+                <header className="mb-10 text-center bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4 text-emerald-600 shadow-sm border border-emerald-200">
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
@@ -386,37 +375,59 @@ const PlayerProfileForm = () => {
                         </div>
                     </div>
 
-                    {/* --- 7. FINAL SUBMISSION --- */}
-                    <div className="bg-emerald-900 p-8 md:p-10 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 transform transition-transform hover:scale-[1.01]">
-                        <div className="w-full md:w-1/2">
-                            <h3 className="text-2xl font-bold text-white mb-2">Ready to Apply?</h3>
-                            <p className="text-emerald-200 mb-4 font-medium">Select the Club you wish to join from the list below.</p>
-                            
-                            <select 
-                                name="club_applied" 
-                                value={formData.club_applied} 
-                                onChange={handleChange} 
-                                className="w-full bg-emerald-800/50 border border-emerald-700 p-4 rounded-xl focus:bg-white focus:text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 transition-all text-white font-bold tracking-wide cursor-pointer appearance-none"
-                                required
-                            >
-                                <option value="" className="text-slate-900">-- Select Target Club --</option>
-                                {clubs.map(club => (
-                                    <option key={club.id} value={club.id} className="text-slate-900">
-                                        {club.name} ({club.city})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                    {/* --- 7. FINAL SUBMISSION & DECLARATION --- */}
+                    <div className="bg-emerald-900 p-8 md:p-10 rounded-3xl shadow-xl flex flex-col gap-8 transform transition-transform hover:scale-[1.01]">
                         
-                        <div className="w-full md:w-auto flex-shrink-0 mt-4 md:mt-0">
-                            <button 
-                                type="submit" 
-                                disabled={loading}
-                                className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-500 text-emerald-950 font-extrabold text-lg px-12 py-5 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3"
-                            >
-                                {loading ? "Uploading..." : "Submit Application"}
-                            </button>
+                        {/* Club Selection Row */}
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                            <div className="w-full md:w-1/2">
+                                <h3 className="text-2xl font-bold text-white mb-2">Ready to Apply?</h3>
+                                <p className="text-emerald-200 mb-4 font-medium">Select the Club you wish to join from the list below.</p>
+                                
+                                <select 
+                                    name="club_applied" 
+                                    value={formData.club_applied} 
+                                    onChange={handleChange} 
+                                    className="w-full bg-emerald-800/50 border border-emerald-700 p-4 rounded-xl focus:bg-white focus:text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 transition-all text-white font-bold tracking-wide cursor-pointer appearance-none"
+                                    required
+                                >
+                                    <option value="" className="text-slate-900">-- Select Target Club --</option>
+                                    {clubs.map(club => (
+                                        <option key={club.id} value={club.id} className="text-slate-900">
+                                            {club.name} ({club.city})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            
+                            <div className="w-full md:w-auto flex-shrink-0 mt-4 md:mt-0">
+                                <button 
+                                    type="submit" 
+                                    // 🌟 Button is completely disabled until they check the box
+                                    disabled={loading || !declarationAccepted}
+                                    className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed text-emerald-950 font-extrabold text-lg px-12 py-5 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3"
+                                >
+                                    {loading ? "Uploading..." : "Submit Application"}
+                                </button>
+                            </div>
                         </div>
+
+                        {/* 🌟 NEW: Mandatory Declaration Checkbox */}
+                        <div className="w-full border-t border-emerald-800/70 pt-6">
+                            <label className="flex items-start gap-4 cursor-pointer group">
+                                <input 
+                                    type="checkbox" 
+                                    required
+                                    checked={declarationAccepted}
+                                    onChange={(e) => setDeclarationAccepted(e.target.checked)}
+                                    className="mt-1 w-6 h-6 rounded border-emerald-700 bg-emerald-800/50 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-emerald-900 cursor-pointer transition-colors shrink-0"
+                                />
+                                <span className="text-emerald-100/90 text-sm leading-relaxed font-medium group-hover:text-white transition-colors">
+                                    I hereby declare that all information provided in this form is true, complete, and accurate to the best of my knowledge. I understand that providing false or misleading information may result in strict disciplinary action by DHSA, for which I accept full responsibility.
+                                </span>
+                            </label>
+                        </div>
+
                     </div>
 
                 </form>
