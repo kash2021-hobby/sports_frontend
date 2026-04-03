@@ -13,7 +13,7 @@ export default function UsersPage() {
     const [editForm, setEditForm] = useState({ name: '', phone: '', email: '', role: '', status: '' });
     const [saving, setSaving] = useState(false);
 
-    const tabs = ['All', 'Players', 'Managers', 'Admins'];
+    const tabs = ['All', 'Players', 'Secretary', 'Admins'];
 
     useEffect(() => {
         fetchUsers();
