@@ -240,7 +240,7 @@ export default function CoachManagement() {
                         </div>
                         <div className="p-6 bg-slate-50 border-t border-slate-100 rounded-b-3xl flex gap-3">
                             <button onClick={() => setIsCreateModalOpen(false)} className="flex-1 bg-white border border-slate-200 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-100">Cancel</button>
-                            <button onClick={handleSaveCoach} className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-emerald-700 active:scale-95 transition-all">Save Coach</button>
+                            <button onClick={handleSaveCoach} className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-emerald-700 active:scale-95 transition-all">Save Secretary</button>
                         </div>
                     </div>
                 </div>
