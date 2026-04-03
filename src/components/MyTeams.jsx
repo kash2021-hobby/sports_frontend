@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Plus, Trash2, Edit, AlertCircle, CheckCircle, Users, Palette, Shirt } from 'lucide-react';
 
+// 🌟 THE HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
+ const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+
 export default function TeamsPage({ clubId }) {
     const [existingTeam, setExistingTeam] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -23,11 +26,10 @@ export default function TeamsPage({ clubId }) {
 
     const fetchTeamData = async () => {
         try {
-            // Mock API call - Replace with your actual endpoint
             const res = await fetch(`https://backend.dhsa.co.in/manager/team/${clubId}`);
             if (res.ok) {
                 const data = await res.json();
-                setExistingTeam(data); // If null, no team exists
+                setExistingTeam(data); 
             }
         } catch (error) {
             console.error("Failed to fetch team:", error);
@@ -38,11 +40,9 @@ export default function TeamsPage({ clubId }) {
 
     const fetchApprovedPlayers = async () => {
         try {
-            // Fetch players for this club who are 'Registered' (Approved by Admin)
             const res = await fetch(`https://backend.dhsa.co.in/clubs/applications?club_id=${clubId}`);
             if (res.ok) {
                 const data = await res.json();
-                // Filter only approved players ready to be put in a team
                 const approved = data.filter(p => p.status === "Registered");
                 setApprovedPlayers(approved);
             }
@@ -63,9 +63,8 @@ export default function TeamsPage({ clubId }) {
         const newSelection = { ...selectedPlayers };
 
         if (newSelection[player.id]) {
-            delete newSelection[player.id]; // Deselect
+            delete newSelection[player.id]; 
         } else {
-            // Select and default the assigned position to their registered position
             newSelection[player.id] = {
                 jerseyNumber: "",
                 assignedPosition: player.position
@@ -93,7 +92,6 @@ export default function TeamsPage({ clubId }) {
             return;
         }
 
-        // Validation: Ensure all selected players have a jersey number
         for (let id of playerIds) {
             if (!selectedPlayers[id].jerseyNumber) {
                 alert("Please assign a jersey number to all selected players.");
@@ -106,11 +104,10 @@ export default function TeamsPage({ clubId }) {
             club_id: clubId,
             name: teamDetails.name,
             jersey_color: teamDetails.jerseyColor,
-            roster: selectedPlayers // Backend will parse this to create team-player links
+            roster: selectedPlayers 
         };
 
         try {
-            // Replace with actual POST endpoint
             const res = await fetch("https://backend.dhsa.co.in/manager/team", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -120,7 +117,7 @@ export default function TeamsPage({ clubId }) {
             if (res.ok) {
                 alert("Permanent team created! Sent to Admin for approval.");
                 setShowCreateModal(false);
-                fetchTeamData(); // Refresh to show the pending team
+                fetchTeamData(); 
             } else {
                 const err = await res.json();
                 alert(err.error || "Failed to create team");
@@ -194,13 +191,21 @@ export default function TeamsPage({ clubId }) {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {existingTeam.players?.map(player => (
-                            <div key={player.id} className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center font-black text-slate-900 shadow-sm border border-slate-200">
+                            <div key={player.id} className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 relative overflow-hidden group">
+                                {/* 🌟 APPLIED DRIVE HELPER HERE (For Existing Team View) */}
+                                <img 
+                                  src={getDriveImageUrl(player.player_photo_url)} 
+                                  alt={player.full_name} 
+                                  className="absolute right-[-10px] top-1/2 -translate-y-1/2 w-24 h-24 rounded-full object-cover border-4 border-slate-50 opacity-20 group-hover:opacity-100 transition-opacity z-0" 
+                                  onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/150x150?text=No+Photo"; }}
+                                />
+                                
+                                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center font-black text-slate-900 shadow-sm border border-slate-200 relative z-10 shrink-0">
                                     {player.jersey_number}
                                 </div>
-                                <div>
+                                <div className="relative z-10 bg-slate-50/80 backdrop-blur-sm rounded-lg px-2 py-1">
                                     <h4 className="font-bold text-slate-900 leading-tight">{player.full_name}</h4>
-                                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">{player.assigned_position}</span>
+                                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{player.assigned_position}</span>
                                 </div>
                             </div>
                         ))}
@@ -299,7 +304,13 @@ export default function TeamsPage({ clubId }) {
                                                                 checked={isSelected}
                                                                 onChange={() => togglePlayerSelection(player)}
                                                             />
-                                                            <img src={player.player_photo_url || "https://via.placeholder.com/150"} alt={player.full_name} className="w-12 h-12 rounded-full object-cover border border-slate-200" />
+                                                            {/* 🌟 APPLIED DRIVE HELPER HERE (For Player Selection List) */}
+                                                            <img 
+                                                              src={getDriveImageUrl(player.player_photo_url)} 
+                                                              alt={player.full_name} 
+                                                              className="w-12 h-12 rounded-full object-cover border border-slate-200 bg-slate-100" 
+                                                              onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/150x150?text=No+Photo"; }}
+                                                            />
                                                             <div>
                                                                 <h4 className="font-bold text-slate-900">{player.full_name}</h4>
                                                                 <p className="text-xs text-slate-500 font-medium">Registered: <span className="text-slate-700">{player.position}</span></p>
@@ -349,7 +360,6 @@ export default function TeamsPage({ clubId }) {
                             <button
                                 type="submit"
                                 form="create-team-form"
-                                // 👇 The fix: Now disables if 0 players are currently selected
                                 disabled={isSubmitting || Object.keys(selectedPlayers).length === 0}
                                 className="px-8 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-95 disabled:opacity-60 disabled:active:scale-100 cursor-pointer disabled:cursor-not-allowed"
                             >
