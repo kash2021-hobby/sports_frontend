@@ -60,7 +60,7 @@ export default function CoachManagement() {
                     onClick={() => setIsCreateModalOpen(true)} 
                     className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 active:scale-95 transition-all shadow-md shadow-emerald-100"
                 >
-                    <Plus className="w-5 h-5" /> Add New Coach
+                    <Plus className="w-5 h-5" /> Add New Secretary
                 </button>
             </header>
 
