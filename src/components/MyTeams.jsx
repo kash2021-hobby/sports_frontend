@@ -346,7 +346,6 @@ export default function TeamsPage({ clubId }) {
                             <button type="button" onClick={() => setShowCreateModal(false)} className="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
                                 Cancel
                             </button>
-                           // 🌟 NEW CODE
                             <button
                                 type="submit"
                                 form="create-team-form"
