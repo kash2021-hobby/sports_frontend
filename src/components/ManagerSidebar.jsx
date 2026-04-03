@@ -1,7 +1,8 @@
 import React from 'react';
 import { LayoutDashboard, ClipboardList, Shield, Users, Trophy, UserCircle, Settings, X, LogOut, Swords, } from 'lucide-react';
 
-export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, handleLogout }) {
+// 🌟 Added pendingTrialsCount to the props here!
+export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, handleLogout, pendingTrialsCount = 0 }) {
     const navItems = [
         { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "Assigned Trials", label: "Assigned Trials", icon: ClipboardList },
@@ -44,7 +45,18 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
                             }`}
                         >
                             <Icon className={`w-5 h-5 ${isActive ? "text-emerald-400" : "text-slate-500 group-hover:text-emerald-400"}`} />
-                            {item.label}
+                            
+                            <div className="flex items-center gap-2">
+                                {item.label}
+                                
+                                {/* 🌟 NOTIFICATION BADGE LOGIC HERE */}
+                                {item.id === "Assigned Trials" && pendingTrialsCount > 0 && (
+                                    <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm shadow-rose-500/30 animate-pulse">
+                                        {pendingTrialsCount}
+                                    </span>
+                                )}
+                            </div>
+
                             {isActive && <div className="ml-auto w-1.5 h-6 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>}
                         </button>
                     );
