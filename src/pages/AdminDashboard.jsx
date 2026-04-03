@@ -461,7 +461,7 @@ export default function AdminControlPanel() {
         { id: "Teams", label: "Teams", icon: Shield },
         { id: "Tournaments", label: "Tournaments", icon: Trophy },
         { id: "Referee Management", label: "Referee Management", icon: Flag },
-        { id: "Notifications", label: "Notifications", icon: Bell },
+        { id: "Notifications", label: "Tournament Notification", icon: Bell },
     ];
 
     const renderContent = () => {
