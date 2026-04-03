@@ -400,19 +400,7 @@ const PlayerProfileForm = () => {
                                 </select>
                             </div>
                             
-                            <div className="w-full md:w-auto flex-shrink-0 mt-4 md:mt-0">
-                                <button 
-                                    type="submit" 
-                                    // 🌟 Button is completely disabled until they check the box
-                                    disabled={loading || !declarationAccepted}
-                                    className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed text-emerald-950 font-extrabold text-lg px-12 py-5 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3"
-                                >
-                                    {loading ? "Uploading..." : "Submit Application"}
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* 🌟 NEW: Mandatory Declaration Checkbox */}
+                            {/* 🌟 NEW: Mandatory Declaration Checkbox */}
                         <div className="w-full border-t border-emerald-800/70 pt-6">
                             <label className="flex items-start gap-4 cursor-pointer group">
                                 <input 
@@ -427,7 +415,17 @@ const PlayerProfileForm = () => {
                                 </span>
                             </label>
                         </div>
-
+                            <div className="w-full md:w-auto flex-shrink-0 mt-4 md:mt-0">
+                                <button 
+                                    type="submit" 
+                                    // 🌟 Button is completely disabled until they check the box
+                                    disabled={loading || !declarationAccepted}
+                                    className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed text-emerald-950 font-extrabold text-lg px-12 py-5 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3"
+                                >
+                                    {loading ? "Uploading..." : "Submit Application"}
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                 </form>
