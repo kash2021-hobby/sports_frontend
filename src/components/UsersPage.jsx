@@ -274,7 +274,7 @@ export default function UsersPage() {
                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/30 outline-none font-semibold text-slate-800"
                                     >
                                         <option value="Player">Player</option>
-                                        <option value="Manager">Manager</option>
+                                        <option value="Manager">Secretary</option>
                                         <option value="Admin">Admin</option>
                                     </select>
                                 </div>
