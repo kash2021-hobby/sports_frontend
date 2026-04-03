@@ -9,7 +9,7 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
         { id: "My Players", label: "My Players", icon: Users },
         { id: "Tournament", label: "Tournament Hub", icon: Trophy },
         { id: "My Tournaments", label: "My Tournaments", icon: Swords },
-        { id: "Profile", label: "Coach Profile", icon: UserCircle },
+        { id: "Profile", label: "Secretary Profile", icon: UserCircle },
         { id: "Settings", label: "Settings", icon: Settings },
     ];
 
