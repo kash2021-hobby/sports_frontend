@@ -24,7 +24,7 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
                     <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
                         <Shield className="w-6 h-6 text-white" />
                     </div>
-                    <span className="text-xl font-extrabold tracking-tight">Secretary<span className="text-emerald-400">Pro</span></span>
+                    <span className="text-xl font-extrabold tracking-tight">DHSA <span className="text-emerald-400">Secretary</span></span>
                 </div>
                 <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
                     <X className="w-6 h-6" />
