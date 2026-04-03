@@ -6,21 +6,49 @@ export default function RefereeDashboard({ user }) {
     const navigate = useNavigate();
     const [matches, setMatches] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [liveMatch, setLiveMatch] = useState(null);
-    const [timeInSeconds, setTimeInSeconds] = useState(0);
-    const [isRunning, setIsRunning] = useState(false);
+    
+    // 🌟 1. INITIALIZE STATE FROM LOCAL STORAGE
+    const [liveMatch, setLiveMatch] = useState(() => {
+        const saved = localStorage.getItem('referee_live_session');
+        return saved ? JSON.parse(saved).liveMatch : null;
+    });
+    const [timeInSeconds, setTimeInSeconds] = useState(() => {
+        const saved = localStorage.getItem('referee_live_session');
+        return saved ? JSON.parse(saved).timeInSeconds : 0;
+    });
+    const [isRunning, setIsRunning] = useState(() => {
+        const saved = localStorage.getItem('referee_live_session');
+        return saved ? JSON.parse(saved).isRunning : false;
+    });
+    const [events, setEvents] = useState(() => {
+        const saved = localStorage.getItem('referee_live_session');
+        return saved ? JSON.parse(saved).events : [];
+    });
+    
     const [currentHalf, setCurrentHalf] = useState(1);
     const timerRef = useRef(null);
-    const [events, setEvents] = useState([]);
     const [eventModal, setEventModal] = useState({ isOpen: false, teamId: null, type: '', teamName: '' });
     const [subOffPlayer, setSubOffPlayer] = useState("");
     const [subOnPlayer, setSubOnPlayer] = useState("");
-    
     const [activeFilter, setActiveFilter] = useState('All');
 
     useEffect(() => {
         if (user?.id) fetchMatches();
     }, [user]);
+
+    // 🌟 2. AUTO-SAVE TO LOCAL STORAGE ON ANY CHANGE
+    useEffect(() => {
+        if (liveMatch) {
+            localStorage.setItem('referee_live_session', JSON.stringify({
+                liveMatch,
+                timeInSeconds,
+                isRunning,
+                events
+            }));
+        } else {
+            localStorage.removeItem('referee_live_session');
+        }
+    }, [liveMatch, timeInSeconds, isRunning, events]);
 
     useEffect(() => {
         if (isRunning) {
@@ -37,8 +65,6 @@ export default function RefereeDashboard({ user }) {
         try {
             const res = await fetch(`https://backend.dhsa.co.in/referee/${user.id}/matches`);
             const data = await res.json();
-            
-            console.log("Raw Backend Data:", data); 
 
             if (res.ok) {
                 const matchArray = Array.isArray(data) ? data : (data.results || data.matches || []);
@@ -94,7 +120,6 @@ export default function RefereeDashboard({ user }) {
         setIsRunning(false);
     };
 
-    // 🌟 HELPER FUNCTION: Syncs scores AND timeline events to the database instantly
     const syncLiveToDatabase = async (updatedEventsList) => {
         const newTeam1Score = updatedEventsList.filter(e => e.type === 'Goal' && e.teamId === liveMatch?.Team1?.id).length;
         const newTeam2Score = updatedEventsList.filter(e => e.type === 'Goal' && e.teamId === liveMatch?.Team2?.id).length;
@@ -106,7 +131,7 @@ export default function RefereeDashboard({ user }) {
                 body: JSON.stringify({ 
                     team1_score: newTeam1Score, 
                     team2_score: newTeam2Score,
-                    match_events: updatedEventsList // Sends the full timeline!
+                    match_events: updatedEventsList
                 })
             });
         } catch (error) {
@@ -114,7 +139,6 @@ export default function RefereeDashboard({ user }) {
         }
     };
 
-    // 🌟 UPDATED: Handle Goals, Yellow Cards, Red Cards
     const handleAddStandardEvent = async (playerId, playerName) => {
         const newEvent = {
             id: Date.now(),
@@ -128,12 +152,9 @@ export default function RefereeDashboard({ user }) {
         const updatedEvents = [newEvent, ...events];
         setEvents(updatedEvents); 
         closeModal();
-
-        // Instantly push to database
         await syncLiveToDatabase(updatedEvents);
     };
 
-    // 🌟 UPDATED: Handle Substitutions
     const handleAddSubstitution = async () => {
         if (!subOffPlayer || !subOnPlayer) {
             alert("Please select both players.");
@@ -158,8 +179,6 @@ export default function RefereeDashboard({ user }) {
         const updatedEvents = [newEvent, ...events];
         setEvents(updatedEvents);
         closeModal();
-
-        // Instantly push to database
         await syncLiveToDatabase(updatedEvents);
     };
 
@@ -184,7 +203,11 @@ export default function RefereeDashboard({ user }) {
             });
             if (res.ok) {
                 alert("Match successfully completed!");
+                // 🌟 3. WIPE LOCAL MEMORY AFTER COMPLETION
+                localStorage.removeItem('referee_live_session');
                 setLiveMatch(null);
+                setTimeInSeconds(0);
+                setEvents([]);
                 fetchMatches();
             }
         } catch (error) {
@@ -227,7 +250,7 @@ export default function RefereeDashboard({ user }) {
             <main className="flex-1 p-4 md:p-8">
                 {liveMatch ? (
                     <div className="animate-in fade-in duration-500 max-w-6xl mx-auto space-y-6 pb-20">
-                        {/* Live Match UI goes here */}
+                        {/* Live Match UI */}
                         <div className="bg-slate-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-slate-800 text-white relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-4 opacity-10"><Activity className="w-48 h-48 animate-pulse"/></div>
                             <div className="text-center mb-6">
