@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ManagerSidebar from "../components/ManagerSidebar";
 import ManagerDashboardHome from "../components/ManagerDashboardHome";
 import AssignedTrials from "../components/AssignedTrials";
@@ -9,10 +9,37 @@ import CoachProfile from "../components/CoachProfile";
 import ManagerSettings from "../components/ManagerSettings";
 import MyTournaments from "../components/MyTournaments";
 import { Menu, LogOut } from "lucide-react";
+// 🌟 IMPORT YOUR API HERE (Adjust the path if needed)
+import { clubAPI } from "../services/api"; 
 
 export default function ManagerDashboard({ clubId = 1 }) {
     const [activeTab, setActiveTab] = useState("Dashboard");
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    
+    // 🌟 1. CREATE STATE FOR NOTIFICATIONS
+    const [pendingTrialsCount, setPendingTrialsCount] = useState(0);
+
+    // 🌟 2. FETCH THE NOTIFICATION COUNT IN THE BACKGROUND
+    useEffect(() => {
+        const fetchNotificationCounts = async () => {
+            try {
+                const response = await clubAPI.getApplications(clubId);
+                const players = response.data.applications || response.data || [];
+                
+                // Count how many players are in the "Applied" state
+                const newApplications = players.filter(p => p.status === "Applied");
+                setPendingTrialsCount(newApplications.length);
+            } catch (error) {
+                console.error("Failed to fetch notification counts:", error);
+            }
+        };
+
+        fetchNotificationCounts(); // Initial Load
+
+        // Optional: Poll every 10 seconds to keep the badge updated live!
+        const interval = setInterval(fetchNotificationCounts, 10000);
+        return () => clearInterval(interval);
+    }, [clubId]);
 
     const handleLogout = () => {
         localStorage.removeItem("currentUser");
@@ -50,6 +77,8 @@ export default function ManagerDashboard({ clubId = 1 }) {
                 isSidebarOpen={isSidebarOpen} 
                 setIsSidebarOpen={setIsSidebarOpen}
                 handleLogout={handleLogout}
+                // 🌟 3. PASS THE COUNT TO THE SIDEBAR AS A PROP
+                pendingTrialsCount={pendingTrialsCount} 
             />
 
             {/* Main Content */}
@@ -60,7 +89,7 @@ export default function ManagerDashboard({ clubId = 1 }) {
                         <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
                             <Menu className="w-6 h-6" />
                         </button>
-                        <span className="font-extrabold text-slate-900 text-lg">Secretary<span className="text-emerald-500">Pro</span></span>
+                        <span className="font-extrabold text-slate-900 text-lg">Coach<span className="text-emerald-500">Pro</span></span>
                     </div>
                     <button onClick={handleLogout} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors flex items-center">
                         <LogOut className="w-6 h-6" />
