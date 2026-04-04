@@ -32,9 +32,11 @@ export default function PlayersPage() {
     };
 
     // 🌟 2. FETCH CLUBS FOR DROPDOWN
+    // 🌟 2. FETCH CLUBS FOR DROPDOWN
     const fetchClubs = async () => {
         try {
-            const res = await API.get('/admin/clubs'); // Adjust this endpoint if needed
+            // ✅ FIXED: Matches your backend exactly!
+            const res = await API.get('/clubs'); 
             setClubs(res.data);
         } catch (err) {
             console.error("Error fetching clubs:", err);
