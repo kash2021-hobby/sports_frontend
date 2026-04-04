@@ -250,20 +250,25 @@ export default function PlayersPage() {
                             </div>
 
                             {/* New Club Dropdown */}
-                            <div>
-                                <label className="block text-xs font-bold text-emerald-600 uppercase mb-1.5">Select New Club *</label>
-                                <select 
-                                    required
-                                    value={transferData.newClubId}
-                                    onChange={(e) => setTransferData({...transferData, newClubId: e.target.value})}
-                                    className="w-full bg-white border border-emerald-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-bold text-slate-800 shadow-sm"
-                                >
-                                    <option value="" disabled>-- Choose Destination Club --</option>
-                                    {clubs.map(club => (
-                                        <option key={club.id} value={club.id}>{club.name}</option>
-                                    ))}
-                                </select>
-                            </div>
+<div>
+    <label className="block text-xs font-bold text-emerald-600 uppercase mb-1.5">Select New Club *</label>
+    <select 
+        required
+        value={transferData.newClubId}
+        onChange={(e) => setTransferData({...transferData, newClubId: e.target.value})}
+        className="w-full bg-white border border-emerald-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-bold text-slate-800 shadow-sm"
+    >
+        <option value="" disabled>-- Choose Destination Club --</option>
+        
+        {/* 🌟 THE FIX: Filter out the player's current club before mapping! */}
+        {clubs
+            .filter(club => club.id !== viewPlayer.club_applied) 
+            .map(club => (
+                <option key={club.id} value={club.id}>{club.name}</option>
+        ))}
+
+    </select>
+</div>
 
                             {/* NOC Document Upload */}
                             <div>
