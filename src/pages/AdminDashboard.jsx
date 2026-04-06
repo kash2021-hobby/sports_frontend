@@ -18,13 +18,7 @@ import RefereePage from '../components/RefereePage';
 /* =========================================================================
    GOOGLE DRIVE HELPER
 ========================================================================= */
-const getDriveImageUrl = (url) => { 
-    if (!url) return "https://placehold.co/150x150?text=No+Photo"; 
-    const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); 
-    const fileId = match ? match[1] : null; 
-    if (!fileId) return url; 
-    return `https://drive.google.com/uc?export=view&id=${fileId}`; 
-};
+ const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
 
 /* =========================================================================
    1. EXISTING APPLICATIONS MODULE
@@ -320,7 +314,7 @@ const ApplicationsView = () => {
                                 
                                 <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
                                     <a 
-                                        href="https://myaadhaar.uidai.gov.in/verifyAadhaar" 
+                                        href="https://tathya.uidai.gov.in/access/login?role=resident" 
                                         target="_blank" 
                                         rel="noreferrer" 
                                         className="bg-white border border-emerald-200 text-emerald-700 px-6 py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2 shrink-0 w-full lg:w-auto"
