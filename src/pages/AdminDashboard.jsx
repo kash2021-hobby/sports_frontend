@@ -3,7 +3,8 @@ import API, { adminAPI } from "../services/api";
 import { 
     LayoutDashboard, Users, UserPlus, FileText, 
     UserCog, Shield, Trophy, Flag, Bell, 
-    Menu, X, Search, ChevronRight, LogOut 
+    Menu, X, Search, ChevronRight, LogOut,
+    History, ArrowRight, Calendar // 🌟 NEW IMPORTS FOR TRANSFER HISTORY
 } from "lucide-react";
 import UsersPage from '../components/UsersPage';
 import CoachManagement from '../components/CoachManagement';
@@ -12,6 +13,17 @@ import NotificationsPage from '../components/NotificationsPage';
 import TeamsPage from '../components/TeamsPage';
 import TournamentsPage from '../components/TournamentsPage';
 import RefereePage from '../components/RefereePage';
+
+/* =========================================================================
+   GOOGLE DRIVE HELPER
+========================================================================= */
+const getDriveImageUrl = (url) => { 
+    if (!url) return "https://placehold.co/150x150?text=No+Photo"; 
+    const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); 
+    const fileId = match ? match[1] : null; 
+    if (!fileId) return url; 
+    return `https://drive.google.com/uc?export=view&id=${fileId}`; 
+};
 
 /* =========================================================================
    1. EXISTING APPLICATIONS MODULE
@@ -25,8 +37,6 @@ const ApplicationsView = () => {
     useEffect(() => {
         fetchPlayers();
     }, []);
-
-   const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
 
     const fetchPlayers = async () => {
         try {
@@ -414,6 +424,147 @@ const DashboardHome = ({ setActiveTab }) => {
 };
 
 /* =========================================================================
+   🌟 NEW: TRANSFER HISTORY COMPONENT 🌟
+========================================================================= */
+const TransferHistoryPage = () => {
+    const [history, setHistory] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            try {
+                const res = await API.get('/admin/transfer-history');
+                setHistory(res.data);
+            } catch (err) {
+                console.error("Error fetching transfer history:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchHistory();
+    }, []);
+
+    // Filter history based on player name search
+    const filteredHistory = history.filter(record => 
+        record.player_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="animate-in fade-in duration-500 space-y-6">
+            <header className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                            <History className="w-6 h-6 text-emerald-500" /> Transfer History Logs
+                        </h1>
+                        <p className="text-slate-500 mt-1 text-sm">A complete audit trail of all player movements between clubs.</p>
+                    </div>
+                    <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg font-bold border border-emerald-100 text-sm">
+                        Total Transfers: {history.length}
+                    </div>
+                </div>
+
+                {/* 🌟 USER-FRIENDLY SEARCH BAR */}
+                <div className="relative w-full mt-2">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search transfers by player name..."
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl shadow-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white text-sm font-medium transition-all"
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+            </header>
+
+            {filteredHistory.length === 0 ? (
+                <div className="text-center bg-white rounded-2xl p-12 shadow-sm border border-slate-100 text-slate-500">
+                    <ArrowRight className="mx-auto h-12 w-12 text-slate-300 mb-4 opacity-50" />
+                    <p className="text-lg font-medium">No transfer history found matching your criteria.</p>
+                </div>
+            ) : (
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div className="overflow-x-auto custom-scrollbar">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-bold tracking-wider">
+                                <tr>
+                                    <th className="px-6 py-4">Date</th>
+                                    <th className="px-6 py-4">Player</th>
+                                    <th className="px-6 py-4">Transfer Path</th>
+                                    <th className="px-6 py-4 text-center">NOC Document</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {filteredHistory.map((record) => (
+                                    <tr key={record.id} className="hover:bg-slate-50/50 transition-colors">
+                                        {/* Date */}
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center gap-2 text-slate-600 font-semibold">
+                                                <Calendar className="w-4 h-4 text-emerald-500" />
+                                                {new Date(record.transfer_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            </div>
+                                        </td>
+
+                                        {/* Player */}
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <img 
+                                                    src={getDriveImageUrl(record.player_photo)} 
+                                                    alt={record.player_name} 
+                                                    className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm bg-slate-100"
+                                                />
+                                                <span className="font-bold text-slate-900">{record.player_name}</span>
+                                            </div>
+                                        </td>
+
+                                        {/* Transfer Path */}
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <span className="px-3 py-1.5 bg-rose-50 border border-rose-100 text-rose-700 font-bold rounded-lg text-xs truncate max-w-[140px]" title={record.from_club}>
+                                                    {record.from_club}
+                                                </span>
+                                                <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />
+                                                <span className="px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-700 font-bold rounded-lg text-xs truncate max-w-[140px]" title={record.to_club}>
+                                                    {record.to_club}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        {/* NOC Document Link */}
+                                        <td className="px-6 py-4 text-center">
+                                            {record.noc_document_url ? (
+                                                <a 
+                                                    href={record.noc_document_url} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center justify-center gap-2 w-32 py-2 bg-slate-900 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm hover:-translate-y-0.5 active:scale-95"
+                                                >
+                                                    <FileText className="w-4 h-4" /> View NOC
+                                                </a>
+                                            ) : (
+                                                <span className="text-slate-400 text-xs font-semibold italic bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">Not Uploaded</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+/* =========================================================================
    3. MAIN LAYOUT SHELL (WITH NOTIFICATION BADGES)
 ========================================================================= */
 export default function AdminControlPanel() {
@@ -452,10 +603,12 @@ export default function AdminControlPanel() {
         window.location.href = "/login";
     };
 
+    // 🌟 ADDED TRANSFER HISTORY TO SIDEBAR
     const navItems = [
         { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "User Management", label: "User Management", icon: Users },
         { id: "Players", label: "Players Directory", icon: UserPlus },
+        { id: "Transfer History", label: "Transfer Logs", icon: History }, // <-- NEW MENU ITEM
         { id: "Applications", label: "Applications", icon: FileText },
         { id: "Coach Management", label: "Secretary Management", icon: UserCog },
         { id: "Teams", label: "Teams", icon: Shield },
@@ -470,9 +623,10 @@ export default function AdminControlPanel() {
             case "Applications": return <ApplicationsView />;
             case "User Management": return <UsersPage />;
             case "Players": return <PlayersPage />;
+            case "Transfer History": return <TransferHistoryPage />; // <-- NEW RENDER CASE
             case "Coach Management": return <CoachManagement />;
-            case "Teams": return < TeamsPage/>;
-            case "Tournaments": return < TournamentsPage/>;
+            case "Teams": return <TeamsPage/>;
+            case "Tournaments": return <TournamentsPage/>;
             case "Referee Management": return <RefereePage />;
             case "Notifications": return <NotificationsPage/>;
             default: return <DashboardHome setActiveTab={setActiveTab} />;
