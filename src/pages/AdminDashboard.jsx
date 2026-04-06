@@ -4,7 +4,8 @@ import {
     LayoutDashboard, Users, UserPlus, FileText, 
     UserCog, Shield, Trophy, Flag, Bell, 
     Menu, X, Search, ChevronRight, LogOut,
-    History, ArrowRight, Calendar // 🌟 NEW IMPORTS FOR TRANSFER HISTORY
+    History, ArrowRight, Calendar, 
+    ExternalLink, CheckCircle // 🌟 NEW IMPORTS FOR AADHAAR VERIFICATION
 } from "lucide-react";
 import UsersPage from '../components/UsersPage';
 import CoachManagement from '../components/CoachManagement';
@@ -17,7 +18,8 @@ import RefereePage from '../components/RefereePage';
 /* =========================================================================
    GOOGLE DRIVE HELPER
 ========================================================================= */
- const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+ const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
+
 /* =========================================================================
    1. EXISTING APPLICATIONS MODULE
 ========================================================================= */
@@ -26,6 +28,10 @@ const ApplicationsView = () => {
     const [loading, setLoading] = useState(true);
     const [viewPlayer, setViewPlayer] = useState(null);
     const [actionStatus, setActionStatus] = useState("");
+    
+    // 🌟 NEW STATES FOR AADHAAR VERIFICATION
+    const [aadhaarVerified, setAadhaarVerified] = useState(false);
+    const [aadhaarScreenshot, setAadhaarScreenshot] = useState(null);
 
     useEffect(() => {
         fetchPlayers();
@@ -41,25 +47,44 @@ const ApplicationsView = () => {
         setLoading(false);
     };
 
+    const handleCloseModal = () => {
+        setViewPlayer(null);
+        setActionStatus("");
+        setAadhaarVerified(false);
+        setAadhaarScreenshot(null);
+    };
+
     const handleUpdateStatus = async (id) => {
         if (!actionStatus) {
             alert("Please select an action from the dropdown first.");
             return;
         }
 
+        // 🌟 FORCE VERIFICATION IF APPROVING
+        if (actionStatus === "Registered" && (!aadhaarVerified || !aadhaarScreenshot)) {
+            alert("To approve a player, you MUST check the Aadhaar verification box and upload the screenshot.");
+            return;
+        }
+
         if (!window.confirm(`Are you sure you want to mark this player as ${actionStatus}?`)) return;
 
         try {
+            // 🌟 SWITCHED TO FORMDATA BECAUSE WE ARE UPLOADING A FILE
+            const formData = new FormData();
+            formData.append("player_id", id);
+            formData.append("status", actionStatus);
+            if (aadhaarScreenshot) {
+                formData.append("aadhaar_screenshot", aadhaarScreenshot);
+            }
+
             const response = await fetch("https://backend.dhsa.co.in/admin/update-status", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ player_id: id, status: actionStatus })
+                body: formData // The browser automatically sets the correct multipart/form-data headers
             });
 
             if (response.ok) {
                 setPlayers(players.filter(p => p.id !== id));
-                setViewPlayer(null);
-                setActionStatus("");
+                handleCloseModal();
                 alert(`Player successfully marked as: ${actionStatus}`);
             } else {
                 alert("Failed to update status");
@@ -123,8 +148,9 @@ const ApplicationsView = () => {
                     <div className="bg-white w-full max-w-5xl rounded-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <h2 className="text-2xl font-bold text-slate-900">Player Application Profile</h2>
-                            <button onClick={() => setViewPlayer(null)} className="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm"><X className="w-5 h-5" /></button>
+                            <button onClick={handleCloseModal} className="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm"><X className="w-5 h-5" /></button>
                         </div>
+                        
                         <div className="p-6 overflow-y-auto custom-scrollbar flex-grow">
                             <div className="flex flex-col md:flex-row gap-8 mb-8">
                                 <img src={getDriveImageUrl(viewPlayer.player_photo_url)} alt={viewPlayer.full_name} className="w-32 h-32 md:w-48 md:h-48 rounded-2xl object-cover shadow-md border-4 border-slate-50" onError={(e) => { e.target.src = "https://placehold.co/150x150?text=No+Photo"; }} />
@@ -142,6 +168,9 @@ const ApplicationsView = () => {
                                     <section>
                                         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4"><span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Personal & Contact</h3>
                                         <div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100">
+                                            {/* 🌟 ADDED AADHAAR TO PERSONAL INFO SO ADMIN CAN SEE IT EASILY */}
+                                            <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Aadhaar No.</span> <span className="font-black text-emerald-700 tracking-widest">{viewPlayer.aadhaar_number || "N/A"}</span></p>
+                                            
                                             <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">DOB</span> <span className="font-semibold text-slate-900">{viewPlayer.dob}</span></p>
                                             <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Location</span> <span className="font-semibold text-slate-900">{viewPlayer.city}, {viewPlayer.district}</span></p>
                                             <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Email</span> <span className="font-semibold text-slate-900">{viewPlayer.email}</span></p>
@@ -281,6 +310,48 @@ const ApplicationsView = () => {
                             </div>
                         </div>
 
+                        {/* 🌟 NEW AADHAAR VERIFICATION BAR */}
+                        {actionStatus === "Registered" && (
+                            <div className="px-6 py-4 bg-emerald-50 border-t border-emerald-100 flex flex-col gap-4 animate-in slide-in-from-bottom-4 duration-300">
+                                <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
+                                    <Shield className="w-4 h-4" /> Mandatory Aadhaar Verification Step
+                                </h3>
+                                
+                                <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                                    <a 
+                                        href="https://myaadhaar.uidai.gov.in/verifyAadhaar" 
+                                        target="_blank" 
+                                        rel="noreferrer" 
+                                        className="bg-white border border-emerald-200 text-emerald-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-100 transition-colors flex items-center gap-2 shrink-0"
+                                    >
+                                        <ExternalLink className="w-4 h-4" /> Visit UIDAI Portal
+                                    </a>
+
+                                    <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-slate-700 bg-white px-4 py-2.5 rounded-xl border border-emerald-200 shadow-sm flex-1 md:flex-none">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={aadhaarVerified} 
+                                            onChange={e => setAadhaarVerified(e.target.checked)} 
+                                            className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 border-emerald-300" 
+                                        />
+                                        <span className="flex items-center gap-1.5">
+                                            I verify <span className="font-black text-emerald-700">{viewPlayer.aadhaar_number}</span> is authentic
+                                        </span>
+                                    </label>
+
+                                    <div className="flex-1 w-full relative group">
+                                        <input 
+                                            type="file" 
+                                            accept="image/*,.pdf" 
+                                            onChange={e => setAadhaarScreenshot(e.target.files[0])} 
+                                            className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition-colors cursor-pointer bg-white border border-emerald-200 rounded-xl" 
+                                        />
+                                        {aadhaarScreenshot && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 bg-white rounded-full" />}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 rounded-b-2xl">
                             <div className="flex items-center gap-3 w-full sm:w-auto">
                                 <label className="text-sm font-bold text-slate-700 uppercase tracking-wide">Action:</label>
@@ -294,8 +365,17 @@ const ApplicationsView = () => {
                                 </select>
                             </div>
                             <div className="flex gap-3 w-full sm:w-auto">
-                                <button onClick={() => { setViewPlayer(null); setActionStatus(""); }} className="flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 transition-colors">Cancel</button>
-                                <button onClick={() => handleUpdateStatus(viewPlayer.id)} className="flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-900 shadow-lg transition-all active:scale-95">Submit Action</button>
+                                <button onClick={handleCloseModal} className="flex-1 sm:flex-none px-6 py-3 rounded-xl font-semibold text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 transition-colors">Cancel</button>
+                                <button 
+                                    onClick={() => handleUpdateStatus(viewPlayer.id)} 
+                                    className={`flex-1 sm:flex-none px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-all active:scale-95 ${
+                                        actionStatus === "Registered" && (!aadhaarVerified || !aadhaarScreenshot) 
+                                            ? "bg-slate-400 cursor-not-allowed" 
+                                            : "bg-slate-800 hover:bg-slate-900"
+                                    }`}
+                                >
+                                    Submit Action
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -417,7 +497,7 @@ const DashboardHome = ({ setActiveTab }) => {
 };
 
 /* =========================================================================
-   🌟 NEW: TRANSFER HISTORY COMPONENT 🌟
+   🌟 TRANSFER HISTORY COMPONENT
 ========================================================================= */
 const TransferHistoryPage = () => {
     const [history, setHistory] = useState([]);
@@ -438,7 +518,6 @@ const TransferHistoryPage = () => {
         fetchHistory();
     }, []);
 
-    // Filter history based on player name search
     const filteredHistory = history.filter(record => 
         record.player_name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -466,7 +545,6 @@ const TransferHistoryPage = () => {
                     </div>
                 </div>
 
-                {/* 🌟 USER-FRIENDLY SEARCH BAR */}
                 <div className="relative w-full mt-2">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
@@ -498,15 +576,12 @@ const TransferHistoryPage = () => {
                             <tbody className="divide-y divide-slate-100">
                                 {filteredHistory.map((record) => (
                                     <tr key={record.id} className="hover:bg-slate-50/50 transition-colors">
-                                        {/* Date */}
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2 text-slate-600 font-semibold">
                                                 <Calendar className="w-4 h-4 text-emerald-500" />
                                                 {new Date(record.transfer_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </div>
                                         </td>
-
-                                        {/* Player */}
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <img 
@@ -517,8 +592,6 @@ const TransferHistoryPage = () => {
                                                 <span className="font-bold text-slate-900">{record.player_name}</span>
                                             </div>
                                         </td>
-
-                                        {/* Transfer Path */}
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <span className="px-3 py-1.5 bg-rose-50 border border-rose-100 text-rose-700 font-bold rounded-lg text-xs truncate max-w-[140px]" title={record.from_club}>
@@ -530,8 +603,6 @@ const TransferHistoryPage = () => {
                                                 </span>
                                             </div>
                                         </td>
-
-                                        {/* NOC Document Link */}
                                         <td className="px-6 py-4 text-center">
                                             {record.noc_document_url ? (
                                                 <a 
@@ -564,14 +635,12 @@ export default function AdminControlPanel() {
     const [activeTab, setActiveTab] = useState("Dashboard");
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
-    // 🌟 1. State to hold the live counts for the sidebar badges
     const [sidebarBadges, setSidebarBadges] = useState({
         "Applications": 0,
         "Teams": 0,
         "Notifications": 0
     });
 
-    // 🌟 2. Automatically fetch badge counts every 30 seconds
     useEffect(() => {
         const fetchBadges = async () => {
             try {
@@ -586,8 +655,8 @@ export default function AdminControlPanel() {
             }
         };
 
-        fetchBadges(); // Run immediately
-        const interval = setInterval(fetchBadges, 30000); // Check every 30 seconds
+        fetchBadges(); 
+        const interval = setInterval(fetchBadges, 30000); 
         return () => clearInterval(interval);
     }, []);
 
@@ -596,12 +665,11 @@ export default function AdminControlPanel() {
         window.location.href = "/login";
     };
 
-    // 🌟 ADDED TRANSFER HISTORY TO SIDEBAR
     const navItems = [
         { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "User Management", label: "User Management", icon: Users },
         { id: "Players", label: "Players Directory", icon: UserPlus },
-        { id: "Transfer History", label: "Transfer Logs", icon: History }, // <-- NEW MENU ITEM
+        { id: "Transfer History", label: "Transfer Logs", icon: History }, 
         { id: "Applications", label: "Applications", icon: FileText },
         { id: "Coach Management", label: "Secretary Management", icon: UserCog },
         { id: "Teams", label: "Teams", icon: Shield },
@@ -616,7 +684,7 @@ export default function AdminControlPanel() {
             case "Applications": return <ApplicationsView />;
             case "User Management": return <UsersPage />;
             case "Players": return <PlayersPage />;
-            case "Transfer History": return <TransferHistoryPage />; // <-- NEW RENDER CASE
+            case "Transfer History": return <TransferHistoryPage />; 
             case "Coach Management": return <CoachManagement />;
             case "Teams": return <TeamsPage/>;
             case "Tournaments": return <TournamentsPage/>;
@@ -657,7 +725,6 @@ export default function AdminControlPanel() {
                         const Icon = item.icon;
                         const isActive = activeTab === item.id;
                         
-                        // 🌟 3. Check if this specific tab has a badge count > 0
                         const badgeCount = sidebarBadges[item.id] || 0;
 
                         return (
@@ -672,14 +739,12 @@ export default function AdminControlPanel() {
                                 <Icon className={`w-5 h-5 shrink-0 ${isActive ? "text-emerald-400" : "text-slate-500 group-hover:text-emerald-400 transition-colors"}`} />
                                 <span className="flex-1 text-left truncate">{item.label}</span>
                                 
-                                {/* 🌟 4. Display the Red Notification Pill */}
                                 {badgeCount > 0 && (
                                     <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm shrink-0 animate-in zoom-in duration-300">
                                         {badgeCount > 99 ? "99+" : badgeCount}
                                     </span>
                                 )}
 
-                                {/* Green active indicator bar */}
                                 {isActive && badgeCount === 0 && <div className="ml-auto w-1.5 h-6 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] shrink-0"></div>}
                             </button>
                         );
