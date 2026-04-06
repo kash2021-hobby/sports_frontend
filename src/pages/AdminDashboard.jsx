@@ -5,7 +5,7 @@ import {
     UserCog, Shield, Trophy, Flag, Bell, 
     Menu, X, Search, ChevronRight, LogOut,
     History, ArrowRight, Calendar, 
-    ExternalLink, CheckCircle // 🌟 NEW IMPORTS FOR AADHAAR VERIFICATION
+    ExternalLink, CheckCircle 
 } from "lucide-react";
 import UsersPage from '../components/UsersPage';
 import CoachManagement from '../components/CoachManagement';
@@ -35,7 +35,6 @@ const ApplicationsView = () => {
     const [viewPlayer, setViewPlayer] = useState(null);
     const [actionStatus, setActionStatus] = useState("");
     
-    // 🌟 NEW STATES FOR AADHAAR VERIFICATION
     const [aadhaarVerified, setAadhaarVerified] = useState(false);
     const [aadhaarScreenshot, setAadhaarScreenshot] = useState(null);
 
@@ -66,7 +65,6 @@ const ApplicationsView = () => {
             return;
         }
 
-        // 🌟 FORCE VERIFICATION IF APPROVING
         if (actionStatus === "Registered" && (!aadhaarVerified || !aadhaarScreenshot)) {
             alert("To approve a player, you MUST check the Aadhaar verification box and upload the screenshot.");
             return;
@@ -75,7 +73,6 @@ const ApplicationsView = () => {
         if (!window.confirm(`Are you sure you want to mark this player as ${actionStatus}?`)) return;
 
         try {
-            // 🌟 SWITCHED TO FORMDATA BECAUSE WE ARE UPLOADING A FILE
             const formData = new FormData();
             formData.append("player_id", id);
             formData.append("status", actionStatus);
@@ -85,7 +82,7 @@ const ApplicationsView = () => {
 
             const response = await fetch("https://backend.dhsa.co.in/admin/update-status", {
                 method: "POST",
-                body: formData // The browser automatically sets the correct multipart/form-data headers
+                body: formData 
             });
 
             if (response.ok) {
@@ -169,14 +166,13 @@ const ApplicationsView = () => {
                                 </div>
                             </div>
 
+                            {/* 🌟 THIS IS THE 2-COLUMN GRID 🌟 */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <div className="space-y-8">
                                     <section>
                                         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4"><span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Personal & Contact</h3>
                                         <div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100">
-                                            {/* 🌟 ADDED AADHAAR TO PERSONAL INFO SO ADMIN CAN SEE IT EASILY */}
                                             <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Aadhaar No.</span> <span className="font-black text-emerald-700 tracking-widest">{viewPlayer.aadhaar_number || "N/A"}</span></p>
-                                            
                                             <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">DOB</span> <span className="font-semibold text-slate-900">{viewPlayer.dob}</span></p>
                                             <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Location</span> <span className="font-semibold text-slate-900">{viewPlayer.city}, {viewPlayer.district}</span></p>
                                             <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Email</span> <span className="font-semibold text-slate-900">{viewPlayer.email}</span></p>
@@ -186,8 +182,6 @@ const ApplicationsView = () => {
                                     
                                     <section>
                                         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4"><span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Documents</h3>
-                                        
-                                        {/* Document Grid */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                                                 <p className="font-semibold mb-3 text-slate-700">Gov Document 1</p>
@@ -212,46 +206,6 @@ const ApplicationsView = () => {
                                                 {viewPlayer.fitness_certificate_url ? (
                                                     <iframe src={viewPlayer.fitness_certificate_url} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Fitness Certificate"></iframe>
                                                 ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
-                                            </div>
-                                        </div>
-
-                                        {/* 🌟 MOVED: AADHAAR VERIFICATION SECTION */}
-                                        <div className="mt-6 bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
-                                            <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
-                                                <Shield className="w-4 h-4" /> Mandatory Aadhaar Verification Step
-                                            </h3>
-                                            
-                                            <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4">
-                                                <a 
-                                                    href="https://myaadhaar.uidai.gov.in/verifyAadhaar" 
-                                                    target="_blank" 
-                                                    rel="noreferrer" 
-                                                    className="bg-white border border-emerald-200 text-emerald-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2 shrink-0 w-full xl:w-auto"
-                                                >
-                                                    <ExternalLink className="w-4 h-4" /> Visit UIDAI Portal
-                                                </a>
-
-                                                <label className="flex items-center justify-center gap-2 cursor-pointer text-sm font-semibold text-slate-700 bg-white px-4 py-2.5 rounded-xl border border-emerald-200 shadow-sm w-full xl:w-auto">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        checked={aadhaarVerified} 
-                                                        onChange={e => setAadhaarVerified(e.target.checked)} 
-                                                        className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 border-emerald-300" 
-                                                    />
-                                                    <span className="flex items-center gap-1.5">
-                                                        I verify <span className="font-black text-emerald-700">{viewPlayer.aadhaar_number}</span>
-                                                    </span>
-                                                </label>
-
-                                                <div className="flex-1 w-full relative group">
-                                                    <input 
-                                                        type="file" 
-                                                        accept="image/*,.pdf" 
-                                                        onChange={e => setAadhaarScreenshot(e.target.files[0])} 
-                                                        className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition-colors cursor-pointer bg-white border border-emerald-200 rounded-xl shadow-sm" 
-                                                    />
-                                                    {aadhaarScreenshot && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 bg-white rounded-full" />}
-                                                </div>
                                             </div>
                                         </div>
                                     </section>
@@ -356,8 +310,51 @@ const ApplicationsView = () => {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                            {/* 🌟 END OF 2-COLUMN GRID 🌟 */}
 
+                            {/* 🌟 FULL WIDTH AADHAAR VERIFICATION BAR 🌟 */}
+                            <div className="mt-8 bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+                                <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
+                                    <Shield className="w-5 h-5" /> Mandatory Aadhaar Verification Step
+                                </h3>
+                                
+                                <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
+                                    <a 
+                                        href="https://myaadhaar.uidai.gov.in/verifyAadhaar" 
+                                        target="_blank" 
+                                        rel="noreferrer" 
+                                        className="bg-white border border-emerald-200 text-emerald-700 px-6 py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2 shrink-0 w-full lg:w-auto"
+                                    >
+                                        <ExternalLink className="w-4 h-4" /> Visit UIDAI Portal
+                                    </a>
+
+                                    <label className="flex items-center justify-center gap-3 cursor-pointer text-sm font-semibold text-slate-700 bg-white px-6 py-3 rounded-xl border border-emerald-200 shadow-sm w-full lg:w-auto shrink-0">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={aadhaarVerified} 
+                                            onChange={e => setAadhaarVerified(e.target.checked)} 
+                                            className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 border-emerald-300" 
+                                        />
+                                        <span className="flex items-center gap-1.5">
+                                            I verify <span className="font-black text-emerald-700">{viewPlayer.aadhaar_number}</span>
+                                        </span>
+                                    </label>
+
+                                    <div className="flex-1 w-full relative group">
+                                        <input 
+                                            type="file" 
+                                            accept="image/*,.pdf" 
+                                            onChange={e => setAadhaarScreenshot(e.target.files[0])} 
+                                            className="w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition-colors cursor-pointer bg-white border border-emerald-200 rounded-xl shadow-sm" 
+                                        />
+                                        {aadhaarScreenshot && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 text-emerald-500 bg-white rounded-full" />}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div> {/* End of Modal Content Container */}
+
+                        {/* 🌟 ACTION BAR */}
                         <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 rounded-b-2xl">
                             <div className="flex items-center gap-3 w-full sm:w-auto">
                                 <label className="text-sm font-bold text-slate-700 uppercase tracking-wide">Action:</label>
