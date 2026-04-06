@@ -18,7 +18,13 @@ import RefereePage from '../components/RefereePage';
 /* =========================================================================
    GOOGLE DRIVE HELPER
 ========================================================================= */
- const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
+const getDriveImageUrl = (url) => { 
+    if (!url) return "https://placehold.co/150x150?text=No+Photo"; 
+    const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); 
+    const fileId = match ? match[1] : null; 
+    if (!fileId) return url; 
+    return `https://drive.google.com/uc?export=view&id=${fileId}`; 
+};
 
 /* =========================================================================
    1. EXISTING APPLICATIONS MODULE
@@ -180,6 +186,8 @@ const ApplicationsView = () => {
                                     
                                     <section>
                                         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4"><span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Documents</h3>
+                                        
+                                        {/* Document Grid */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                                                 <p className="font-semibold mb-3 text-slate-700">Gov Document 1</p>
@@ -204,6 +212,46 @@ const ApplicationsView = () => {
                                                 {viewPlayer.fitness_certificate_url ? (
                                                     <iframe src={viewPlayer.fitness_certificate_url} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Fitness Certificate"></iframe>
                                                 ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
+                                            </div>
+                                        </div>
+
+                                        {/* 🌟 MOVED: AADHAAR VERIFICATION SECTION */}
+                                        <div className="mt-6 bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+                                            <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
+                                                <Shield className="w-4 h-4" /> Mandatory Aadhaar Verification Step
+                                            </h3>
+                                            
+                                            <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4">
+                                                <a 
+                                                    href="https://myaadhaar.uidai.gov.in/verifyAadhaar" 
+                                                    target="_blank" 
+                                                    rel="noreferrer" 
+                                                    className="bg-white border border-emerald-200 text-emerald-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2 shrink-0 w-full xl:w-auto"
+                                                >
+                                                    <ExternalLink className="w-4 h-4" /> Visit UIDAI Portal
+                                                </a>
+
+                                                <label className="flex items-center justify-center gap-2 cursor-pointer text-sm font-semibold text-slate-700 bg-white px-4 py-2.5 rounded-xl border border-emerald-200 shadow-sm w-full xl:w-auto">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={aadhaarVerified} 
+                                                        onChange={e => setAadhaarVerified(e.target.checked)} 
+                                                        className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 border-emerald-300" 
+                                                    />
+                                                    <span className="flex items-center gap-1.5">
+                                                        I verify <span className="font-black text-emerald-700">{viewPlayer.aadhaar_number}</span>
+                                                    </span>
+                                                </label>
+
+                                                <div className="flex-1 w-full relative group">
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*,.pdf" 
+                                                        onChange={e => setAadhaarScreenshot(e.target.files[0])} 
+                                                        className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition-colors cursor-pointer bg-white border border-emerald-200 rounded-xl shadow-sm" 
+                                                    />
+                                                    {aadhaarScreenshot && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 bg-white rounded-full" />}
+                                                </div>
                                             </div>
                                         </div>
                                     </section>
@@ -310,47 +358,6 @@ const ApplicationsView = () => {
                             </div>
                         </div>
 
-                       {/* 🌟 AADHAAR VERIFICATION BAR (NOW ALWAYS VISIBLE) */}
-                        <div className="px-6 py-4 bg-emerald-50 border-t border-emerald-100 flex flex-col gap-4">
-                            <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
-                                <Shield className="w-4 h-4" /> Mandatory Aadhaar Verification Step
-                            </h3>
-                            
-                            <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-                                <a 
-                                    href="https://myaadhaar.uidai.gov.in/verifyAadhaar" 
-                                    target="_blank" 
-                                    rel="noreferrer" 
-                                    className="bg-white border border-emerald-200 text-emerald-700 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-100 transition-colors flex items-center gap-2 shrink-0"
-                                >
-                                    <ExternalLink className="w-4 h-4" /> Visit UIDAI Portal
-                                </a>
-
-                                <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-slate-700 bg-white px-4 py-2.5 rounded-xl border border-emerald-200 shadow-sm flex-1 md:flex-none">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={aadhaarVerified} 
-                                        onChange={e => setAadhaarVerified(e.target.checked)} 
-                                        className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 border-emerald-300" 
-                                    />
-                                    <span className="flex items-center gap-1.5">
-                                        I verify <span className="font-black text-emerald-700">{viewPlayer.aadhaar_number}</span> is authentic
-                                    </span>
-                                </label>
-
-                                <div className="flex-1 w-full relative group">
-                                    <input 
-                                        type="file" 
-                                        accept="image/*,.pdf" 
-                                        onChange={e => setAadhaarScreenshot(e.target.files[0])} 
-                                        className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition-colors cursor-pointer bg-white border border-emerald-200 rounded-xl" 
-                                    />
-                                    {aadhaarScreenshot && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 bg-white rounded-full" />}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 🌟 ACTION BAR */}
                         <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 rounded-b-2xl">
                             <div className="flex items-center gap-3 w-full sm:w-auto">
                                 <label className="text-sm font-bold text-slate-700 uppercase tracking-wide">Action:</label>
