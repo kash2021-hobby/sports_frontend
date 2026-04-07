@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { playerAPI, adminAPI } from "../services/api"; 
+import { playerAPI } from "../services/api"; 
 import { useNavigate } from "react-router-dom";
 
 const PlayerProfileForm = () => {
@@ -12,8 +12,11 @@ const PlayerProfileForm = () => {
     const [loading, setLoading] = useState(false);
     const [clubs, setClubs] = useState([]); 
     
-    // 🌟 NEW: State to track if the mandatory declaration is checked
     const [declarationAccepted, setDeclarationAccepted] = useState(false);
+
+    // 🌟 NEW: Error states for duplicate checking
+    const [aadhaarError, setAadhaarError] = useState("");
+    const [panError, setPanError] = useState("");
 
     const [formData, setFormData] = useState({
         full_name: "",
@@ -25,6 +28,7 @@ const PlayerProfileForm = () => {
         weight: "",
         blood_group: "",
         aadhaar_number: "",
+        pan_number: "", // 🌟 NEW: Added PAN Number to state
         position: "",
         strong_foot: "",
         preferred_team: "",
@@ -52,9 +56,6 @@ const PlayerProfileForm = () => {
         fitness_certificate: null
     });
 
-    /* ===============================
-       FETCH CLUBS & AUTH CHECK
-    ================================ */
     useEffect(() => {
         if (!playerId) {
             navigate("/login");
@@ -74,20 +75,18 @@ const PlayerProfileForm = () => {
         loadClubs();
     }, [playerId, navigate]);
 
-    /* ===============================
-       HANDLE TEXT INPUT
-    ================================ */
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
+        
+        // Clear errors when the user starts typing again
+        if (name === 'aadhaar_number') setAadhaarError("");
+        if (name === 'pan_number') setPanError("");
     };
 
-    /* ===============================
-       HANDLE FILE INPUT
-    ================================ */
     const handleFileChange = (e) => {
         const { name, files: uploadedFiles } = e.target;
         setFiles(prev => ({
@@ -96,13 +95,38 @@ const PlayerProfileForm = () => {
         }));
     };
 
-    /* ===============================
-       SUBMIT FORM
-    ================================ */
+    // 🌟 NEW: Check Database for Duplicates on Blur (when user clicks away from input)
+    const checkDuplicateDocument = async (field, value) => {
+        if (!value) return;
+        
+        try {
+            const res = await fetch(`https://backend.dhsa.co.in/players/check-document?field=${field}&value=${value}`);
+            const data = await res.json();
+            
+            if (data.exists) {
+                if (field === 'aadhaar_number') {
+                    setAadhaarError("This Aadhaar number is already registered!");
+                    alert("This Aadhaar number is already in use by another player.");
+                }
+                if (field === 'pan_number') {
+                    setPanError("This PAN number is already registered!");
+                    alert("This PAN number is already in use by another player.");
+                }
+            }
+        } catch (err) {
+            console.error("Error checking document", err);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Final safety check just in case
+        // Block submission if there are duplicate errors
+        if (aadhaarError || panError) {
+            alert("Please fix the errors with your Aadhaar or PAN number before submitting.");
+            return;
+        }
+
         if (!declarationAccepted) {
             alert("You must accept the declaration before submitting.");
             return;
@@ -140,12 +164,14 @@ const PlayerProfileForm = () => {
 
     const inputClasses = "w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all duration-200 text-slate-800 font-medium placeholder:text-slate-400 placeholder:font-normal";
     const labelClasses = "block text-slate-700 text-sm font-bold mb-2 ml-1 tracking-wide";
+    
+    // Check if player is 18 or older
+    const isAdult = parseInt(formData.age) >= 18;
 
     return (
         <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
             <div className="max-w-4xl mx-auto">
                 
-                {/* --- HEADER --- */}
                 <header className="mb-10 text-center bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4 text-emerald-600 shadow-sm border border-emerald-200">
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -187,10 +213,39 @@ const PlayerProfileForm = () => {
                                 <label className={labelClasses}>Nationality</label>
                                 <input name="nationality" placeholder="Nationality" value={formData.nationality} onChange={handleChange} className={inputClasses} required />
                             </div>
+                            
                             <div className="md:col-span-2">
                                 <label className={labelClasses}>Aadhaar Number (or National ID)</label>
-                                <input name="aadhaar_number" placeholder="Enter 12-digit Aadhaar Number" value={formData.aadhaar_number} onChange={handleChange} className={inputClasses} required />
+                                <input 
+                                    name="aadhaar_number" 
+                                    placeholder="Enter 12-digit Aadhaar Number" 
+                                    value={formData.aadhaar_number} 
+                                    onChange={handleChange} 
+                                    onBlur={(e) => checkDuplicateDocument('aadhaar_number', e.target.value)} // 🌟 NEW
+                                    className={`${inputClasses} ${aadhaarError ? 'border-rose-500 ring-rose-500/20 focus:ring-rose-500/40 focus:border-rose-500' : ''}`} 
+                                    required 
+                                />
+                                {aadhaarError && <p className="text-rose-500 text-xs font-bold mt-1.5 ml-1">{aadhaarError}</p>}
                             </div>
+
+                            {/* 🌟 NEW: CONDITIONAL PAN NUMBER FIELD */}
+                            {isAdult && (
+                                <div className="md:col-span-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <label className={labelClasses}>PAN Number <span className="text-rose-500">*</span></label>
+                                    <input 
+                                        name="pan_number" 
+                                        placeholder="Enter 10-character PAN Number" 
+                                        value={formData.pan_number} 
+                                        onChange={handleChange} 
+                                        onBlur={(e) => checkDuplicateDocument('pan_number', e.target.value)}
+                                        className={`${inputClasses} ${panError ? 'border-rose-500 ring-rose-500/20 focus:ring-rose-500/40 focus:border-rose-500' : ''}`} 
+                                        required 
+                                    />
+                                    <p className="text-slate-400 text-xs mt-1.5 ml-1 font-medium">Required since you are 18 or older.</p>
+                                    {panError && <p className="text-rose-500 text-xs font-bold mt-1.5 ml-1">{panError}</p>}
+                                </div>
+                            )}
+
                         </div>
                     </div>
 
@@ -367,9 +422,10 @@ const PlayerProfileForm = () => {
                                 <input type="file" name="gov_doc_3" onChange={handleFileChange} required className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-colors border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
                             </div>
                             
+                            {/* 🌟 NEW: FITNESS CERTIFICATE NO LONGER MANDATORY */}
                             <div className="space-y-2">
-                                <label className={labelClasses}>Fitness Certificate <span className="text-rose-500">*</span></label>
-                                <input type="file" name="fitness_certificate" onChange={handleFileChange} required className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-colors border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
+                                <label className={labelClasses}>Fitness Certificate <span className="text-slate-400 text-xs font-medium ml-1">(Optional)</span></label>
+                                <input type="file" name="fitness_certificate" onChange={handleFileChange} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-colors border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
                             </div>
 
                         </div>
@@ -378,7 +434,6 @@ const PlayerProfileForm = () => {
                     {/* --- 7. FINAL SUBMISSION & DECLARATION --- */}
                     <div className="bg-emerald-900 p-8 md:p-10 rounded-3xl shadow-xl flex flex-col gap-8 transform transition-transform hover:scale-[1.01]">
                         
-                        {/* Club Selection Row */}
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                             <div className="w-full md:w-1/2">
                                 <h3 className="text-2xl font-bold text-white mb-2">Ready to Apply?</h3>
@@ -400,7 +455,6 @@ const PlayerProfileForm = () => {
                                 </select>
                             </div>
                             
-                            {/* 🌟 NEW: Mandatory Declaration Checkbox */}
                         <div className="w-full border-t border-emerald-800/70 pt-6">
                             <label className="flex items-start gap-4 cursor-pointer group">
                                 <input 
@@ -418,8 +472,7 @@ const PlayerProfileForm = () => {
                             <div className="w-full md:w-auto flex-shrink-0 mt-4 md:mt-0">
                                 <button 
                                     type="submit" 
-                                    // 🌟 Button is completely disabled until they check the box
-                                    disabled={loading || !declarationAccepted}
+                                    disabled={loading || !declarationAccepted || aadhaarError || panError}
                                     className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed text-emerald-950 font-extrabold text-lg px-12 py-5 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3"
                                 >
                                     {loading ? "Uploading..." : "Submit Application"}
