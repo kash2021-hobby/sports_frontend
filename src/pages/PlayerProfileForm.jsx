@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { playerAPI } from "../services/api"; 
 import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react"; // 🌟 NEW: Imported Logout Icon
 
 const PlayerProfileForm = () => {
     const navigate = useNavigate();
@@ -28,7 +29,7 @@ const PlayerProfileForm = () => {
         weight: "",
         blood_group: "",
         aadhaar_number: "",
-        pan_number: "", // 🌟 NEW: Added PAN Number to state
+        pan_number: "", 
         position: "",
         strong_foot: "",
         preferred_team: "",
@@ -75,6 +76,12 @@ const PlayerProfileForm = () => {
         loadClubs();
     }, [playerId, navigate]);
 
+    // 🌟 NEW: Logout Function
+    const handleLogout = () => {
+        localStorage.removeItem("currentUser");
+        navigate("/login");
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -95,7 +102,7 @@ const PlayerProfileForm = () => {
         }));
     };
 
-    // 🌟 NEW: Check Database for Duplicates on Blur (when user clicks away from input)
+    // Check Database for Duplicates on Blur (when user clicks away from input)
     const checkDuplicateDocument = async (field, value) => {
         if (!value) return;
         
@@ -156,7 +163,8 @@ const PlayerProfileForm = () => {
 
         } catch (err) {
             console.error(err);
-            alert("Submission Failed");
+            const errorMessage = err.response?.data?.error || "Submission Failed. Please check your details.";
+            alert(errorMessage);
         }
 
         setLoading(false);
@@ -172,8 +180,19 @@ const PlayerProfileForm = () => {
         <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
             <div className="max-w-4xl mx-auto">
                 
-                <header className="mb-10 text-center bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4 text-emerald-600 shadow-sm border border-emerald-200">
+                {/* 🌟 UPDATED: Header now has relative positioning for the absolute logout button */}
+                <header className="relative mb-10 text-center bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                    
+                    {/* 🌟 NEW: Logout Button Component */}
+                    <button 
+                        onClick={handleLogout}
+                        type="button"
+                        className="absolute top-6 right-6 flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-500 hover:bg-rose-100 hover:text-rose-600 rounded-xl font-bold text-sm transition-colors shadow-sm"
+                    >
+                        <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Logout</span>
+                    </button>
+
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4 text-emerald-600 shadow-sm border border-emerald-200 mt-2 sm:mt-0">
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     </div>
                     <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Complete Player Profile</h2>
@@ -221,14 +240,13 @@ const PlayerProfileForm = () => {
                                     placeholder="Enter 12-digit Aadhaar Number" 
                                     value={formData.aadhaar_number} 
                                     onChange={handleChange} 
-                                    onBlur={(e) => checkDuplicateDocument('aadhaar_number', e.target.value)} // 🌟 NEW
+                                    onBlur={(e) => checkDuplicateDocument('aadhaar_number', e.target.value)} 
                                     className={`${inputClasses} ${aadhaarError ? 'border-rose-500 ring-rose-500/20 focus:ring-rose-500/40 focus:border-rose-500' : ''}`} 
                                     required 
                                 />
                                 {aadhaarError && <p className="text-rose-500 text-xs font-bold mt-1.5 ml-1">{aadhaarError}</p>}
                             </div>
 
-                            {/* 🌟 NEW: CONDITIONAL PAN NUMBER FIELD */}
                             {isAdult && (
                                 <div className="md:col-span-2 animate-in fade-in slide-in-from-top-2 duration-300">
                                     <label className={labelClasses}>PAN Number <span className="text-rose-500">*</span></label>
@@ -422,7 +440,6 @@ const PlayerProfileForm = () => {
                                 <input type="file" name="gov_doc_3" onChange={handleFileChange} required className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-colors border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
                             </div>
                             
-                            {/* 🌟 NEW: FITNESS CERTIFICATE NO LONGER MANDATORY */}
                             <div className="space-y-2">
                                 <label className={labelClasses}>Fitness Certificate <span className="text-slate-400 text-xs font-medium ml-1">(Optional)</span></label>
                                 <input type="file" name="fitness_certificate" onChange={handleFileChange} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-colors border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
