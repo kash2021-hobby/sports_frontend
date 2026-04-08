@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { playerAPI } from "../services/api"; 
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react"; // 🌟 NEW: Imported Logout Icon
+import { LogOut } from "lucide-react"; 
 
 const PlayerProfileForm = () => {
     const navigate = useNavigate();
@@ -15,7 +15,6 @@ const PlayerProfileForm = () => {
     
     const [declarationAccepted, setDeclarationAccepted] = useState(false);
 
-    // 🌟 NEW: Error states for duplicate checking
     const [aadhaarError, setAadhaarError] = useState("");
     const [panError, setPanError] = useState("");
 
@@ -76,20 +75,40 @@ const PlayerProfileForm = () => {
         loadClubs();
     }, [playerId, navigate]);
 
-    // 🌟 NEW: Logout Function
     const handleLogout = () => {
         localStorage.removeItem("currentUser");
         navigate("/login");
     };
 
+    // 🌟 HELPER FUNCTION: Calculate exact age based on DOB
+    const calculateAge = (dobString) => {
+        if (!dobString) return "";
+        const birthDate = new Date(dobString);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        // If the birth month hasn't happened yet this year, or it's the birth month but the day hasn't happened yet, subtract 1
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
         
-        // Clear errors when the user starts typing again
+        setFormData(prev => {
+            const newData = { ...prev, [name]: value };
+            
+            // 🌟 NEW: Automatically calculate Age if DOB is changed
+            if (name === "dob") {
+                newData.age = calculateAge(value);
+            }
+            
+            return newData;
+        });
+        
         if (name === 'aadhaar_number') setAadhaarError("");
         if (name === 'pan_number') setPanError("");
     };
@@ -102,7 +121,6 @@ const PlayerProfileForm = () => {
         }));
     };
 
-    // Check Database for Duplicates on Blur (when user clicks away from input)
     const checkDuplicateDocument = async (field, value) => {
         if (!value) return;
         
@@ -113,11 +131,9 @@ const PlayerProfileForm = () => {
             if (data.exists) {
                 if (field === 'aadhaar_number') {
                     setAadhaarError("This Aadhaar number is already registered!");
-                    alert("This Aadhaar number is already in use by another player.");
                 }
                 if (field === 'pan_number') {
                     setPanError("This PAN number is already registered!");
-                    alert("This PAN number is already in use by another player.");
                 }
             }
         } catch (err) {
@@ -128,7 +144,6 @@ const PlayerProfileForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Block submission if there are duplicate errors
         if (aadhaarError || panError) {
             alert("Please fix the errors with your Aadhaar or PAN number before submitting.");
             return;
@@ -180,10 +195,8 @@ const PlayerProfileForm = () => {
         <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
             <div className="max-w-4xl mx-auto">
                 
-                {/* 🌟 UPDATED: Header now has relative positioning for the absolute logout button */}
                 <header className="relative mb-10 text-center bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                     
-                    {/* 🌟 NEW: Logout Button Component */}
                     <button 
                         onClick={handleLogout}
                         type="button"
@@ -218,7 +231,8 @@ const PlayerProfileForm = () => {
                             </div>
                             <div>
                                 <label className={labelClasses}>Age</label>
-                                <input type="number" name="age" placeholder="Age in years" value={formData.age} onChange={handleChange} className={inputClasses} required />
+                                {/* 🌟 UPDATED: Made Age read-only so they don't mess up the calculation! */}
+                                <input type="number" name="age" placeholder="Calculated from DOB" value={formData.age} className={`${inputClasses} bg-slate-100 cursor-not-allowed text-slate-500`} readOnly required />
                             </div>
                             <div>
                                 <label className={labelClasses}>Gender</label>
