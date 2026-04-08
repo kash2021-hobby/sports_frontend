@@ -2,18 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Flag, Phone, X, Edit, ShieldCheck, KeyRound, Trash2, Mail, MapPin, Calendar, Camera } from 'lucide-react';
 
 // 🌟 Google Drive Image Helper
-const getDriveImageUrl = (url) => { 
-    if (!url) return "https://placehold.co/150x150?text=No+Photo"; 
-    
-    // Extract the file ID from the Google Drive URL
-    const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); 
-    const fileId = match ? match[1] : null; 
-    
-    if (!fileId) return url; 
-    
-    // Convert to direct image URL
-    return `https://drive.google.com/uc?export=view&id=${fileId}`; 
-};
+ const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
 
 export default function RefereePage() {
     const [referees, setReferees] = useState([]);
