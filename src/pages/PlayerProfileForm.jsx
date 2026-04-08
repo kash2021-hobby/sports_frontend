@@ -431,7 +431,7 @@ const PlayerProfileForm = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className={labelClasses}>Gov Document 2 (e.g., PAN Card) <span className="text-rose-500">*</span></label>
+                                <label className={labelClasses}>Gov Document 2 (e.g., PAN Card/Birth Certificate) <span className="text-rose-500">*</span></label>
                                 <input type="file" name="gov_doc_2" onChange={handleFileChange} required className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-colors border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
                             </div>
 
