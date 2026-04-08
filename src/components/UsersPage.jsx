@@ -31,11 +31,13 @@ export default function UsersPage() {
     };
 
     /* ===============================
-        🌟 OMNI-SEARCH & FILTER LOGIC
+        🌟 OMNI-SEARCH & FILTER LOGIC (FIXED)
     ================================ */
     const filteredUsers = users.filter(user => {
-        // 1. Tab Matching: Maps "Players" to "Player", etc.
-        const matchesTab = activeTab === 'All' || user.role === activeTab.replace('s', ''); 
+        // 1. Tab Matching: Handles plural 's' removal AND maps Secretary -> Manager
+        const matchesTab = activeTab === 'All' || 
+                           (activeTab === 'Secretary' && user.role === 'Manager') || 
+                           user.role === activeTab.replace('s', ''); 
         
         // 2. Omni-Search Matching
         const query = searchQuery.toLowerCase();
@@ -44,7 +46,7 @@ export default function UsersPage() {
             user.phone?.includes(query) ||
             user.role?.toLowerCase().includes(query) ||
             user.email?.toLowerCase().includes(query) ||
-            user.status?.toLowerCase().includes(query); // Now you can search by status!
+            user.status?.toLowerCase().includes(query);
 
         return matchesTab && matchesSearch;
     });
@@ -183,7 +185,8 @@ export default function UsersPage() {
                                     <td className="px-6 py-4 space-y-1.5">
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-semibold text-xs border ${getRoleStyles(user.role)}`}>
                                             {user.role === 'Admin' ? <Shield className="w-3 h-3" /> : null}
-                                            {user.role}
+                                            {/* UI Polish: Always show 'Secretary' instead of 'Manager' to avoid confusion */}
+                                            {user.role === 'Manager' ? 'Secretary' : user.role}
                                         </span>
                                         {/* Show Status Badge for Players */}
                                         {user.role === 'Player' && (
