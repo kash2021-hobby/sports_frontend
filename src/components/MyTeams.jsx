@@ -2,13 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Plus, Trash2, Edit, AlertCircle, CheckCircle, Users, Palette, Shirt } from 'lucide-react';
 
 // 🌟 THE HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
-const getDriveImageUrl = (url) => { 
-    if (!url) return "https://placehold.co/150x150?text=No+Photo"; 
-    const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); 
-    const fileId = match ? match[1] : null; 
-    if (!fileId) return url; 
-    return `https://drive.google.com/uc?export=view&id=${fileId}`; 
-};
+const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+
 
 export default function TeamsPage({ clubId }) {
     const [existingTeam, setExistingTeam] = useState(null);
@@ -23,8 +18,8 @@ export default function TeamsPage({ clubId }) {
     const [selectedPlayers, setSelectedPlayers] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // 🌟 NEW: Set a minimum player requirement (You can change this to 5, 7, 11, etc. later)
-    const minPlayersRequired = 1;
+    // 🌟 FIXED: Set to 0 to allow creating empty teams!
+    const minPlayersRequired = 0; 
     const selectedCount = Object.keys(selectedPlayers).length;
 
     useEffect(() => {
@@ -96,7 +91,7 @@ export default function TeamsPage({ clubId }) {
     const handleSubmitTeam = async (e) => {
         e.preventDefault();
 
-        // 🌟 STRICT CHECK: Prevent submission if they don't meet the minimum
+        // 🌟 STRICT CHECK
         if (selectedCount < minPlayersRequired) {
             alert(`You must select at least ${minPlayersRequired} player(s) to form a team.`);
             return;
@@ -369,7 +364,7 @@ export default function TeamsPage({ clubId }) {
                             <button
                                 type="submit"
                                 form="create-team-form"
-                                // 🌟 NEW: Button disables itself and changes text if 0 players are selected
+                                // 🌟 FIXED
                                 disabled={isSubmitting || selectedCount < minPlayersRequired}
                                 className="px-8 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-95 disabled:opacity-60 disabled:active:scale-100 cursor-pointer disabled:cursor-not-allowed"
                             >
