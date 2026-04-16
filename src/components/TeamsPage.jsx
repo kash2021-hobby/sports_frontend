@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, CheckCircle, Clock, Eye, Users, Palette } from 'lucide-react';
+import API from '../services/api'; // 🌟 Ensure this path is correct for your project
 
 export default function TeamsPage() {
     const [teams, setTeams] = useState([]);
@@ -9,8 +10,14 @@ export default function TeamsPage() {
     // State to handle the View Details modal
     const [viewTeam, setViewTeam] = useState(null);
 
-    // 🌟 ADDED YOUR CUSTOM IMAGE FETCHER
-    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+    // 🌟 HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
+    const getDriveImageUrl = (url) => { 
+        if (!url) return "https://placehold.co/150x150?text=No+Photo"; 
+        const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); 
+        const fileId = match ? match[1] : null; 
+        if (!fileId) return url; 
+        return `https://drive.google.com/uc?export=view&id=${fileId}`; 
+    };
 
     useEffect(() => {
         fetchTeams();
@@ -18,11 +25,9 @@ export default function TeamsPage() {
 
     const fetchTeams = async () => {
         try {
-            const res = await fetch("https://backend.dhsa.co.in/admin/teams");
-            if (res.ok) {
-                const data = await res.json();
-                setTeams(data);
-            }
+            // 🌟 REFACTORED: Using API instance
+            const res = await API.get("/admin/teams");
+            setTeams(res.data);
         } catch (error) {
             console.error("Failed to fetch teams:", error);
         } finally {
@@ -35,24 +40,20 @@ export default function TeamsPage() {
         
         setIsProcessing(true);
         try {
-            const res = await fetch(`https://backend.dhsa.co.in/admin/teams/${teamId}/approve`, {
-                method: 'PUT',
-                headers: { "Content-Type": "application/json" }
-            });
+            // 🌟 REFACTORED: Using API instance
+            await API.put(`/admin/teams/${teamId}/approve`);
 
-            if (res.ok) {
-                // Update local state to instantly reflect the approval
-                setTeams(teams.map(team => 
-                    team.id === teamId ? { ...team, status: "Approved" } : team
-                ));
-                // Close modal if it was open
-                setViewTeam(null);
-            } else {
-                alert("Failed to approve team.");
-            }
+            // Update local state to instantly reflect the approval
+            setTeams(teams.map(team => 
+                team.id === teamId ? { ...team, status: "Approved" } : team
+            ));
+            
+            // Close modal if it was open
+            setViewTeam(null);
+            
         } catch (error) {
             console.error("Error approving team:", error);
-            alert("Server error.");
+            alert("Server error or failed to approve team.");
         } finally {
             setIsProcessing(false);
         }
@@ -210,7 +211,6 @@ export default function TeamsPage() {
                                                     <span className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-0.5">No.</span>
                                                     <span className="font-black text-slate-900 leading-none">{player.TeamPlayer?.jersey_number || '-'}</span>
                                                 </div>
-                                                {/* 🌟 APPLIED FUNCTION HERE */}
                                                 <img src={getDriveImageUrl(player.player_photo_url)} alt={player.full_name} className="w-12 h-12 rounded-full object-cover border border-slate-200" />
                                                 <div>
                                                     <h5 className="font-bold text-slate-900 leading-tight">{player.full_name}</h5>
