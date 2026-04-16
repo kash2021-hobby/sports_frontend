@@ -2,7 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Plus, Trash2, Edit, AlertCircle, CheckCircle, Users, Palette, Shirt } from 'lucide-react';
 
 // 🌟 THE HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
- const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+const getDriveImageUrl = (url) => { 
+    if (!url) return "https://placehold.co/150x150?text=No+Photo"; 
+    const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); 
+    const fileId = match ? match[1] : null; 
+    if (!fileId) return url; 
+    return `https://drive.google.com/uc?export=view&id=${fileId}`; 
+};
 
 export default function TeamsPage({ clubId }) {
     const [existingTeam, setExistingTeam] = useState(null);
@@ -16,6 +22,10 @@ export default function TeamsPage({ clubId }) {
     // Key-value map for selected players: { playerId: { jerseyNumber: "", assignedPosition: "" } }
     const [selectedPlayers, setSelectedPlayers] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // 🌟 NEW: Set a minimum player requirement (You can change this to 5, 7, 11, etc. later)
+    const minPlayersRequired = 1;
+    const selectedCount = Object.keys(selectedPlayers).length;
 
     useEffect(() => {
         if (clubId) {
@@ -86,12 +96,13 @@ export default function TeamsPage({ clubId }) {
     const handleSubmitTeam = async (e) => {
         e.preventDefault();
 
-        const playerIds = Object.keys(selectedPlayers);
-        if (playerIds.length === 0) {
-            alert("Please select at least one player for your team.");
+        // 🌟 STRICT CHECK: Prevent submission if they don't meet the minimum
+        if (selectedCount < minPlayersRequired) {
+            alert(`You must select at least ${minPlayersRequired} player(s) to form a team.`);
             return;
         }
 
+        const playerIds = Object.keys(selectedPlayers);
         for (let id of playerIds) {
             if (!selectedPlayers[id].jerseyNumber) {
                 alert("Please assign a jersey number to all selected players.");
@@ -192,7 +203,6 @@ export default function TeamsPage({ clubId }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {existingTeam.players?.map(player => (
                             <div key={player.id} className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 relative overflow-hidden group">
-                                {/* 🌟 APPLIED DRIVE HELPER HERE (For Existing Team View) */}
                                 <img 
                                   src={getDriveImageUrl(player.player_photo_url)} 
                                   alt={player.full_name} 
@@ -283,7 +293,7 @@ export default function TeamsPage({ clubId }) {
                                 <section>
                                     <h3 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 flex items-center justify-between">
                                         <span>Select Squad</span>
-                                        <span className="text-sm font-medium bg-emerald-100 text-emerald-800 py-1 px-3 rounded-full">{Object.keys(selectedPlayers).length} Selected</span>
+                                        <span className="text-sm font-medium bg-emerald-100 text-emerald-800 py-1 px-3 rounded-full">{selectedCount} Selected</span>
                                     </h3>
 
                                     {approvedPlayers.length === 0 ? (
@@ -304,7 +314,6 @@ export default function TeamsPage({ clubId }) {
                                                                 checked={isSelected}
                                                                 onChange={() => togglePlayerSelection(player)}
                                                             />
-                                                            {/* 🌟 APPLIED DRIVE HELPER HERE (For Player Selection List) */}
                                                             <img 
                                                               src={getDriveImageUrl(player.player_photo_url)} 
                                                               alt={player.full_name} 
@@ -360,10 +369,16 @@ export default function TeamsPage({ clubId }) {
                             <button
                                 type="submit"
                                 form="create-team-form"
-                                disabled={isSubmitting || Object.keys(selectedPlayers).length === 0}
+                                // 🌟 NEW: Button disables itself and changes text if 0 players are selected
+                                disabled={isSubmitting || selectedCount < minPlayersRequired}
                                 className="px-8 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-95 disabled:opacity-60 disabled:active:scale-100 cursor-pointer disabled:cursor-not-allowed"
                             >
-                                {isSubmitting ? "Submitting..." : "Send for Approval"}
+                                {isSubmitting 
+                                    ? "Submitting..." 
+                                    : selectedCount < minPlayersRequired 
+                                        ? `Select at least ${minPlayersRequired} player` 
+                                        : "Send for Approval"
+                                }
                             </button>
                         </div>
                     </div>
