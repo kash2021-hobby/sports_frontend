@@ -4,6 +4,7 @@ import { LayoutDashboard, ClipboardList, Shield, Users, Trophy, UserCircle, Sett
 // 🌟 THE HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
 const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
 
+
 export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, handleLogout, pendingTrialsCount = 0, clubInfo }) {
     const navItems = [
         { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -21,12 +22,13 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
             fixed lg:static inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none flex flex-col
             ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}>
-            <div className="h-20 flex items-center justify-between px-6 border-b border-slate-800">
-                <div className="flex items-center gap-3">
+            {/* 🌟 INCREASED HEIGHT OF THE HEADER TO ACCOMMODATE LARGER LOGO */}
+            <div className="h-24 flex items-center justify-between px-6 border-b border-slate-800">
+                <div className="flex items-center gap-4">
                     
-                    {/* 🌟 FIXED: Looking for clubInfo.logo instead of logo_url */}
+                    {/* 🌟 INCREASED LOGO SIZE: Changed w-10 h-10 to w-14 h-14 */}
                     {clubInfo?.logo ? (
-                        <div className="w-10 h-10 bg-white rounded-xl p-0.5 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden shrink-0">
+                        <div className="w-14 h-14 bg-white rounded-xl p-1 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden shrink-0">
                             <img 
                                 src={getDriveImageUrl(clubInfo.logo)} 
                                 alt={clubInfo.name} 
@@ -35,8 +37,8 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
                             />
                         </div>
                     ) : (
-                        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
-                            <Shield className="w-6 h-6 text-white" />
+                        <div className="w-14 h-14 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
+                            <Shield className="w-8 h-8 text-white" />
                         </div>
                     )}
 
@@ -45,7 +47,7 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
                             {clubInfo ? clubInfo.name : "DHSA Secretary"}
                         </span>
                         {clubInfo?.city && (
-                            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider leading-none mt-0.5 truncate">
+                            <span className="text-[11px] text-emerald-400 font-bold uppercase tracking-wider leading-none mt-1 truncate">
                                 {clubInfo.city}
                             </span>
                         )}
