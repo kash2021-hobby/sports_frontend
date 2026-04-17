@@ -347,7 +347,7 @@ const ApplicationsView = () => {
                                 
                                 <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
                                     <a 
-                                        href="https://tathya.uidai.gov.in/access/login?role=resident" 
+                                        href="https://myaadhaar.uidai.gov.in/genricDownloadAadhaar/en" 
                                         target="_blank" 
                                         rel="noreferrer" 
                                         className="bg-white border border-emerald-200 text-emerald-700 px-6 py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2 shrink-0 w-full lg:w-auto"
