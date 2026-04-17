@@ -17,7 +17,7 @@ export default function AssignedTrials({ clubId }) {
         fetchApplications();
     }, [clubId]);
 
-   const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+   const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
 
    const fetchApplications = async () => {
         try {
@@ -219,7 +219,8 @@ export default function AssignedTrials({ clubId }) {
                             <div className="bg-white border rounded-2xl p-6 shadow-sm"> 
                                 <h3 className="text-lg font-bold mb-4 text-gray-800"> Personal Details </h3> 
                                 <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-700"> 
-                                    <p><span className="font-semibold">DOB:</span> {viewPlayer.dob}</p> 
+                                    {/* 🌟 FIXED: Format DOB to DD-MM-YYYY 🌟 */}
+                                    <p><span className="font-semibold">DOB:</span> {viewPlayer.dob ? new Date(viewPlayer.dob).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</p> 
                                     <p><span className="font-semibold">Height:</span> {viewPlayer.height} cm</p> 
                                     <p><span className="font-semibold">Weight:</span> {viewPlayer.weight} kg</p> 
                                     <p><span className="font-semibold">Blood Group:</span> {viewPlayer.blood_group}</p> 
@@ -269,7 +270,7 @@ export default function AssignedTrials({ clubId }) {
                                 </div> 
                             </div> 
 
-                            {/* 🌟 UPDATED DOCUMENTS SECTION 🌟 */} 
+                            {/* DOCUMENTS SECTION */} 
                             <div> 
                                 <h3 className="text-lg font-bold mb-4 text-gray-800"> Documents </h3> 
                                 <div className="grid md:grid-cols-2 gap-6"> 
