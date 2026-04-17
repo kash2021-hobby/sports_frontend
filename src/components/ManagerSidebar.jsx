@@ -1,8 +1,17 @@
 import React from 'react';
 import { LayoutDashboard, ClipboardList, Shield, Users, Trophy, UserCircle, Settings, X, LogOut, Swords, } from 'lucide-react';
 
-// 🌟 Added pendingTrialsCount to the props here!
-export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, handleLogout, pendingTrialsCount = 0 }) {
+// 🌟 THE HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
+const getDriveImageUrl = (url) => { 
+    if (!url) return "https://placehold.co/150x150?text=Logo"; 
+    const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); 
+    const fileId = match ? match[1] : null; 
+    if (!fileId) return url; 
+    return `https://drive.google.com/uc?export=view&id=${fileId}`; 
+};
+
+// 🌟 Added pendingTrialsCount AND clubInfo to the props here!
+export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, handleLogout, pendingTrialsCount = 0, clubInfo }) {
     const navItems = [
         { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "Assigned Trials", label: "Assigned Trials", icon: ClipboardList },
@@ -21,12 +30,38 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
         `}>
             <div className="h-20 flex items-center justify-between px-6 border-b border-slate-800">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                        <Shield className="w-6 h-6 text-white" />
+                    
+                    {/* 🌟 DYNAMIC LOGO OR FALLBACK SHIELD */}
+                    {clubInfo?.logo_url ? (
+                        <div className="w-10 h-10 bg-white rounded-xl p-0.5 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden shrink-0">
+                            <img 
+                                src={getDriveImageUrl(clubInfo.logo_url)} 
+                                alt={clubInfo.name} 
+                                className="w-full h-full object-contain rounded-lg"
+                                onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/150x150?text=Logo"; }}
+                            />
+                        </div>
+                    ) : (
+                        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
+                            <Shield className="w-6 h-6 text-white" />
+                        </div>
+                    )}
+
+                    {/* 🌟 DYNAMIC CLUB NAME OR FALLBACK TEXT */}
+                    <div className="flex flex-col truncate">
+                        <span className="text-xl font-extrabold tracking-tight truncate" title={clubInfo?.name || "DHSA Secretary"}>
+                            {clubInfo ? clubInfo.name : "DHSA Secretary"}
+                        </span>
+                        {/* Optionally show the city if it's a specific club */}
+                        {clubInfo?.city && (
+                            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider leading-none mt-0.5 truncate">
+                                {clubInfo.city}
+                            </span>
+                        )}
                     </div>
-                    <span className="text-xl font-extrabold tracking-tight">DHSA <span className="text-emerald-400">Secretary</span></span>
+
                 </div>
-                <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white">
+                <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-white shrink-0 ml-2">
                     <X className="w-6 h-6" />
                 </button>
             </div>
