@@ -2,15 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Plus, Trash2, Edit, AlertCircle, CheckCircle, Users, Palette, Shirt } from 'lucide-react';
 
 // 🌟 THE HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
-const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+const getDriveImageUrl = (url) => { 
+    if (!url) return "https://placehold.co/150x150?text=No+Photo"; 
+    const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); 
+    const fileId = match ? match[1] : null; 
+    if (!fileId) return url; 
+    return `https://drive.google.com/uc?export=view&id=${fileId}`; 
+};
 
-
-export default function TeamsPage({ clubId }) {
+// 🌟 FIXED: Renamed component to MyTeams to prevent export conflicts
+export default function MyTeams({ clubId }) {
     const [existingTeam, setExistingTeam] = useState(null);
     const [loading, setLoading] = useState(true);
 
     // Modal & Form States
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false); // Track edit mode
     const [approvedPlayers, setApprovedPlayers] = useState([]);
     const [teamDetails, setTeamDetails] = useState({ name: "", jerseyColor: "" });
 
@@ -18,7 +25,7 @@ export default function TeamsPage({ clubId }) {
     const [selectedPlayers, setSelectedPlayers] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // 🌟 FIXED: Set to 0 to allow creating empty teams!
+    // Set to 0 to allow creating empty teams!
     const minPlayersRequired = 0; 
     const selectedCount = Object.keys(selectedPlayers).length;
 
@@ -56,12 +63,65 @@ export default function TeamsPage({ clubId }) {
         }
     };
 
+    // HELPER: Reset Form
+    const resetForm = () => {
+        setTeamDetails({ name: "", jerseyColor: "" });
+        setSelectedPlayers({});
+        setIsEditing(false);
+        setShowCreateModal(false);
+    };
+
     const handleCreateClick = () => {
         if (existingTeam) {
             alert("A permanent team is already created for your club. You can only edit or delete the existing team.");
             return;
         }
+        resetForm();
         setShowCreateModal(true);
+    };
+
+    // Handle Edit Button Click
+    const handleEditClick = () => {
+        if (!existingTeam) return;
+
+        setTeamDetails({ 
+            name: existingTeam.name, 
+            jerseyColor: existingTeam.jersey_color || "" 
+        });
+
+        const currentRoster = {};
+        existingTeam.players.forEach(p => {
+            currentRoster[p.id] = {
+                jerseyNumber: p.jersey_number,
+                assignedPosition: p.assigned_position
+            };
+        });
+
+        setSelectedPlayers(currentRoster);
+        setIsEditing(true);
+        setShowCreateModal(true);
+    };
+
+    // Handle Delete Button Click
+    const handleDeleteClick = async () => {
+        if (!window.confirm("🚨 Are you sure you want to delete this permanent team? This will clear your roster and cannot be undone.")) return;
+
+        try {
+            const res = await fetch(`https://backend.dhsa.co.in/manager/team/${existingTeam.id}`, {
+                method: "DELETE"
+            });
+
+            if (res.ok) {
+                alert("Team deleted successfully.");
+                setExistingTeam(null);
+            } else {
+                const err = await res.json();
+                alert(err.error || "Failed to delete team.");
+            }
+        } catch (error) {
+            console.error("Delete Error:", error);
+            alert("Server error while deleting team.");
+        }
     };
 
     const togglePlayerSelection = (player) => {
@@ -91,7 +151,7 @@ export default function TeamsPage({ clubId }) {
     const handleSubmitTeam = async (e) => {
         e.preventDefault();
 
-        // 🌟 STRICT CHECK
+        // STRICT CHECK
         if (selectedCount < minPlayersRequired) {
             alert(`You must select at least ${minPlayersRequired} player(s) to form a team.`);
             return;
@@ -113,20 +173,26 @@ export default function TeamsPage({ clubId }) {
             roster: selectedPlayers 
         };
 
+        // Dynamically change URL and Method based on Edit State
+        const url = isEditing 
+            ? `https://backend.dhsa.co.in/manager/team/${existingTeam.id}` 
+            : `https://backend.dhsa.co.in/manager/team`;
+        const method = isEditing ? "PUT" : "POST";
+
         try {
-            const res = await fetch("https://backend.dhsa.co.in/manager/team", {
-                method: "POST",
+            const res = await fetch(url, {
+                method: method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
 
             if (res.ok) {
-                alert("Permanent team created! Sent to Admin for approval.");
-                setShowCreateModal(false);
+                alert(`Team successfully ${isEditing ? 'updated' : 'created'}! Sent to Admin for approval.`);
+                resetForm();
                 fetchTeamData(); 
             } else {
                 const err = await res.json();
-                alert(err.error || "Failed to create team");
+                alert(err.error || "Failed to save team");
             }
         } catch (error) {
             console.error(error);
@@ -185,10 +251,16 @@ export default function TeamsPage({ clubId }) {
                     </div>
 
                     <div className="flex gap-3 mb-8">
-                        <button className="bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-700 font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2">
+                        <button 
+                            onClick={handleEditClick}
+                            className="bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-700 font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2"
+                        >
                             <Edit className="w-4 h-4" /> Edit Roster
                         </button>
-                        <button className="bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2">
+                        <button 
+                            onClick={handleDeleteClick}
+                            className="bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2"
+                        >
                             <Trash2 className="w-4 h-4" /> Delete Team
                         </button>
                     </div>
@@ -234,17 +306,19 @@ export default function TeamsPage({ clubId }) {
                 </div>
             )}
 
-            {/* CREATE TEAM MODAL */}
+            {/* CREATE/EDIT TEAM MODAL */}
             {showCreateModal && (
                 <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
 
                         <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                             <div>
-                                <h2 className="text-2xl font-extrabold text-slate-900">Create Permanent Team</h2>
+                                <h2 className="text-2xl font-extrabold text-slate-900">
+                                    {isEditing ? "Edit Permanent Team" : "Create Permanent Team"}
+                                </h2>
                                 <p className="text-sm font-medium text-slate-500 mt-1">Select approved players and assign jerseys.</p>
                             </div>
-                            <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-full transition-colors">✕</button>
+                            <button onClick={resetForm} className="p-2 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-full transition-colors">✕</button>
                         </div>
 
                         <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
@@ -358,13 +432,12 @@ export default function TeamsPage({ clubId }) {
                         </div>
 
                         <div className="px-8 py-5 border-t border-slate-100 bg-white flex justify-end gap-3">
-                            <button type="button" onClick={() => setShowCreateModal(false)} className="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
+                            <button type="button" onClick={resetForm} className="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 form="create-team-form"
-                                // 🌟 FIXED
                                 disabled={isSubmitting || selectedCount < minPlayersRequired}
                                 className="px-8 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-95 disabled:opacity-60 disabled:active:scale-100 cursor-pointer disabled:cursor-not-allowed"
                             >
@@ -372,7 +445,7 @@ export default function TeamsPage({ clubId }) {
                                     ? "Submitting..." 
                                     : selectedCount < minPlayersRequired 
                                         ? `Select at least ${minPlayersRequired} player` 
-                                        : "Send for Approval"
+                                        : (isEditing ? "Save Changes" : "Send for Approval")
                                 }
                             </button>
                         </div>
