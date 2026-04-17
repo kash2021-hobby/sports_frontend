@@ -9,24 +9,22 @@ import CoachProfile from "../components/CoachProfile";
 import ManagerSettings from "../components/ManagerSettings";
 import MyTournaments from "../components/MyTournaments";
 import { Menu, LogOut } from "lucide-react";
-// 🌟 IMPORT YOUR API HERE (Adjust the path if needed)
 import { clubAPI } from "../services/api"; 
 
 export default function ManagerDashboard({ clubId = 1 }) {
     const [activeTab, setActiveTab] = useState("Dashboard");
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
-    // 🌟 1. CREATE STATE FOR NOTIFICATIONS
     const [pendingTrialsCount, setPendingTrialsCount] = useState(0);
+    // 🌟 NEW: State to hold the club's specific name and logo
+    const [clubInfo, setClubInfo] = useState(null);
 
-    // 🌟 2. FETCH THE NOTIFICATION COUNT IN THE BACKGROUND
     useEffect(() => {
+        // Fetch Notification Counts
         const fetchNotificationCounts = async () => {
             try {
                 const response = await clubAPI.getApplications(clubId);
                 const players = response.data.applications || response.data || [];
-                
-                // Count how many players are in the "Applied" state
                 const newApplications = players.filter(p => p.status === "Applied");
                 setPendingTrialsCount(newApplications.length);
             } catch (error) {
@@ -34,9 +32,24 @@ export default function ManagerDashboard({ clubId = 1 }) {
             }
         };
 
-        fetchNotificationCounts(); // Initial Load
+        // 🌟 NEW: Fetch Club Details
+        const fetchClubInfo = async () => {
+            try {
+                const res = await fetch(`https://backend.dhsa.co.in/clubs`);
+                const data = await res.json();
+                // Find the specific club this manager belongs to
+                const myClub = data.find(c => parseInt(c.id) === parseInt(clubId));
+                if (myClub) {
+                    setClubInfo(myClub);
+                }
+            } catch (error) {
+                console.error("Failed to fetch club info:", error);
+            }
+        };
 
-        // Optional: Poll every 10 seconds to keep the badge updated live!
+        fetchNotificationCounts();
+        fetchClubInfo(); // Initial Load
+
         const interval = setInterval(fetchNotificationCounts, 10000);
         return () => clearInterval(interval);
     }, [clubId]);
@@ -62,7 +75,6 @@ export default function ManagerDashboard({ clubId = 1 }) {
 
     return (
         <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
-            {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
                 <div 
                     className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
@@ -77,8 +89,8 @@ export default function ManagerDashboard({ clubId = 1 }) {
                 isSidebarOpen={isSidebarOpen} 
                 setIsSidebarOpen={setIsSidebarOpen}
                 handleLogout={handleLogout}
-                // 🌟 3. PASS THE COUNT TO THE SIDEBAR AS A PROP
                 pendingTrialsCount={pendingTrialsCount} 
+                clubInfo={clubInfo} // 🌟 PASSED DOWN TO SIDEBAR
             />
 
             {/* Main Content */}
@@ -89,7 +101,9 @@ export default function ManagerDashboard({ clubId = 1 }) {
                         <button onClick={() => setIsSidebarOpen(true)} className="p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
                             <Menu className="w-6 h-6" />
                         </button>
-                        <span className="font-extrabold text-slate-900 text-lg">Coach<span className="text-emerald-500">Pro</span></span>
+                        <span className="font-extrabold text-slate-900 text-lg">
+                            {clubInfo ? clubInfo.name : "Manager Dashboard"}
+                        </span>
                     </div>
                     <button onClick={handleLogout} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors flex items-center">
                         <LogOut className="w-6 h-6" />
