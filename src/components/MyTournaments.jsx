@@ -52,6 +52,15 @@ export default function MyTournaments({ clubId }) {
         return typeof rosterData === 'string' ? JSON.parse(rosterData) : rosterData;
     };
 
+    // 🌟 HELPER FOR DRIVE IMAGES
+    const getDriveImageUrl = (url) => { 
+        if (!url) return "https://placehold.co/150x150?text=No+Photo"; 
+        const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); 
+        const fileId = match ? match[1] : null; 
+        if (!fileId) return url; 
+        return `https://drive.google.com/uc?export=view&id=${fileId}`; 
+    };
+
     if (loading) return <div className="p-8 text-slate-500 font-medium animate-pulse">Loading your tournament data...</div>;
 
     return (
@@ -74,7 +83,7 @@ export default function MyTournaments({ clubId }) {
                         const isApproved = reg.status === "Approved";
 
                         const teamMatchesInTourney = myMatches.filter(m => 
-                            (String(m.tournament_id) === String(t.id) || String(m.TournamentId) === String(t.id)) 
+                            (String(m.tournament_id) === String(t?.id) || String(m.TournamentId) === String(t?.id)) 
                             && m.status !== 'Completed'
                         );
                         
@@ -85,6 +94,7 @@ export default function MyTournaments({ clubId }) {
                         let myTeamName = myTeam?.name || "Your Team";
 
                         if (nextMatch) {
+                            // 🌟 FIXED: Safely checking myTeam?.id instead of myTeam.id
                             const isTeam1 = String(nextMatch.team1_id) === String(myTeam?.id);
                             opponentName = isTeam1 ? nextMatch.team2_name : nextMatch.team1_name;
                             
@@ -113,10 +123,10 @@ export default function MyTournaments({ clubId }) {
                                         )}
                                     </div>
 
-                                    <h3 className="text-xl font-extrabold text-slate-900 mt-8">{t.name}</h3>
+                                    <h3 className="text-xl font-extrabold text-slate-900 mt-8">{t?.name}</h3>
                                     <div className="mt-4 space-y-2 text-sm text-slate-600 font-medium">
-                                        <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-blue-500"/> {t.city}</p>
-                                        <p className="flex items-center gap-2"><Calendar className="w-4 h-4 text-amber-500"/> {new Date(t.start_date).toLocaleDateString()}</p>
+                                        <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-blue-500"/> {t?.city}</p>
+                                        <p className="flex items-center gap-2"><Calendar className="w-4 h-4 text-amber-500"/> {t?.start_date ? new Date(t.start_date).toLocaleDateString() : "TBD"}</p>
                                     </div>
                                     
                                     <button 
@@ -175,7 +185,7 @@ export default function MyTournaments({ clubId }) {
                                                         </div>
                                                     </div>
                                                     
-                                                    {/* 🌟 NEW: MATCH DETAILS & SCHEDULE */}
+                                                    {/* MATCH DETAILS & SCHEDULE */}
                                                     <div className="mt-6 pt-4 border-t border-white/10 flex flex-col items-center justify-center gap-3">
                                                         <div className="text-center text-sm font-bold text-emerald-400 flex items-center justify-center gap-2">
                                                             <Trophy className="w-4 h-4"/> 
@@ -184,10 +194,9 @@ export default function MyTournaments({ clubId }) {
                                                                 : `${nextMatch.round_name} • Match ${nextMatch.match_number}`}
                                                         </div>
 
-                                                        {/* Shows Date, Time, and Location if the Admin scheduled it! */}
                                                         {nextMatch.match_date && (
                                                             <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] font-bold text-slate-300 relative z-10">
-                                                                <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-md border border-white/5"><Calendar className="w-3.5 h-3.5 text-emerald-400"/> {nextMatch.match_date}</span>
+                                                                <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-md border border-white/5"><Calendar className="w-3.5 h-3.5 text-emerald-400"/> {new Date(nextMatch.match_date).toLocaleDateString()}</span>
                                                                 <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-md border border-white/5"><Clock className="w-3.5 h-3.5 text-blue-400"/> {nextMatch.match_time}</span>
                                                                 <span className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-md border border-white/5"><MapPin className="w-3.5 h-3.5 text-rose-400"/> {nextMatch.venue}</span>
                                                             </div>
@@ -251,6 +260,7 @@ export default function MyTournaments({ clubId }) {
                             
                             {(() => {
                                 const roster = getParsedRoster(viewRoster.roster_data);
+                                // 🌟 FIXED: Safely checking myTeam?.players
                                 const starters = myTeam?.players?.filter(p => roster.starters.includes(p.id)) || [];
                                 const subs = myTeam?.players?.filter(p => roster.subs.includes(p.id)) || [];
 
@@ -270,7 +280,7 @@ export default function MyTournaments({ clubId }) {
                                                         </div>
                                                         <div>
                                                             <p className="font-bold text-slate-900 text-sm leading-tight">{p.full_name}</p>
-                                                            <p className="text-xs text-slate-500 font-medium">{p.assigned_position}</p>
+                                                            <p className="text-xs text-slate-500 font-medium">{p.assigned_position || 'Unassigned'}</p>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -292,7 +302,7 @@ export default function MyTournaments({ clubId }) {
                                                         </div>
                                                         <div>
                                                             <p className="font-bold text-slate-900 text-sm leading-tight">{p.full_name}</p>
-                                                            <p className="text-xs text-slate-500 font-medium">{p.assigned_position}</p>
+                                                            <p className="text-xs text-slate-500 font-medium">{p.assigned_position || 'Unassigned'}</p>
                                                         </div>
                                                     </div>
                                                 ))}
