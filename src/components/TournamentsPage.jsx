@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Calendar, Plus, X, UploadCloud, MapPin, Users, Coins, QrCode, Trash2 } from 'lucide-react';
-import TournamentBracketManager from './TournamentBracketManager'; // Or wherever you saved it
+import { Trophy, Calendar, Plus, X, UploadCloud, MapPin, Coins, QrCode, Trash2, Edit } from 'lucide-react';
+import TournamentBracketManager from './TournamentBracketManager'; 
 
 export default function TournamentsPage() {
     const [tournaments, setTournaments] = useState([]);
@@ -8,6 +8,9 @@ export default function TournamentsPage() {
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [managingBracket, setManagingBracket] = useState(null);
+
+    // Track if we are editing an existing tournament
+    const [editingId, setEditingId] = useState(null);
 
     // Form State
     const bannerInputRef = useRef(null);
@@ -17,16 +20,19 @@ export default function TournamentsPage() {
     const [bannerPreview, setBannerPreview] = useState(null);
     const [qrPreview, setQrPreview] = useState(null);
     
-    const [formData, setFormData] = useState({
+    // Default blank form state
+    const defaultFormState = {
         name: '', description: '', format: 'Knockout',
         registration_deadline: '', start_date: '', end_date: '',
         venue: '', city: '', age_category: 'Open', gender: 'Men\'s',
         max_teams: 16, entry_fee: 0, prize_pool: '',
         registration_mode: ['Offline'], 
         upi_id: ''
-    });
+    };
+    
+    const [formData, setFormData] = useState(defaultFormState);
 
-   const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
 
     useEffect(() => { fetchTournaments(); }, []);
 
@@ -70,19 +76,71 @@ export default function TournamentsPage() {
         setManagingBracket(tournament);
     };
 
-    // 🌟 NEW: Delete Function
+    // Format Date Helper for editing inputs
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        const d = new Date(dateString);
+        let month = '' + (d.getMonth() + 1);
+        let day = '' + d.getDate();
+        const year = d.getFullYear();
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+        return [year, month, day].join('-');
+    };
+
+    // 🌟 Handle Edit Button Click
+    const handleEditClick = (tournament) => {
+        setEditingId(tournament.id);
+        
+        let parsedModes = ['Offline'];
+        if (tournament.registration_mode) {
+            try {
+                parsedModes = typeof tournament.registration_mode === 'string' ? JSON.parse(tournament.registration_mode) : tournament.registration_mode;
+            } catch(e) { console.error("Error parsing modes", e); }
+        }
+
+        setFormData({
+            name: tournament.name || '', 
+            description: tournament.description || '', 
+            format: tournament.format || 'Knockout',
+            registration_deadline: formatDateForInput(tournament.registration_deadline), 
+            start_date: formatDateForInput(tournament.start_date), 
+            end_date: formatDateForInput(tournament.end_date),
+            venue: tournament.venue || '', 
+            city: tournament.city || '', 
+            age_category: tournament.age_category || 'Open', 
+            gender: tournament.gender || 'Men\'s',
+            max_teams: tournament.max_teams || 16, 
+            entry_fee: tournament.entry_fee || 0, 
+            prize_pool: tournament.prize_pool || '',
+            registration_mode: parsedModes, 
+            upi_id: tournament.upi_id || ''
+        });
+
+        setBannerPreview(tournament.banner_url ? getDriveImageUrl(tournament.banner_url) : null);
+        setQrPreview(tournament.qr_code_url ? getDriveImageUrl(tournament.qr_code_url) : null);
+        setBannerFile(null);
+        setQrFile(null);
+        
+        setIsCreating(true);
+    };
+
+    // Reset form when closing modal
+    const closeFormModal = () => {
+        setIsCreating(false);
+        setEditingId(null);
+        setFormData(defaultFormState);
+        setBannerFile(null); setBannerPreview(null);
+        setQrFile(null); setQrPreview(null);
+    };
+
     const handleDelete = async (id, name) => {
         if (!window.confirm(`Are you absolutely sure you want to delete "${name}"? This action cannot be undone.`)) {
             return;
         }
-
         try {
-            const res = await fetch(`https://backend.dhsa.co.in/admin/tournaments/${id}`, {
-                method: 'DELETE'
-            });
-
+            const res = await fetch(`https://backend.dhsa.co.in/admin/tournaments/${id}`, { method: 'DELETE' });
             if (res.ok) {
-                // Remove from local state immediately
                 setTournaments(tournaments.filter(t => t.id !== id));
             } else {
                 alert("Failed to delete the tournament.");
@@ -115,25 +173,25 @@ export default function TournamentsPage() {
         if (bannerFile) submitData.append('banner_file', bannerFile);
         if (qrFile) submitData.append('qr_code_file', qrFile);
 
+        // Dynamically switch between Create (POST) and Edit (PUT)
+        const url = editingId 
+            ? `https://backend.dhsa.co.in/admin/tournaments/${editingId}` 
+            : `https://backend.dhsa.co.in/admin/tournaments`;
+        
+        const method = editingId ? "PUT" : "POST";
+
         try {
-            const res = await fetch("https://backend.dhsa.co.in/admin/tournaments", {
-                method: "POST",
+            const res = await fetch(url, {
+                method: method,
                 body: submitData
             });
 
             if (res.ok) {
-                alert("Tournament created!");
-                setIsCreating(false);
-                setFormData({
-                    name: '', description: '', format: 'Knockout', registration_deadline: '', start_date: '', end_date: '',
-                    venue: '', city: '', age_category: 'Open', gender: 'Men\'s', max_teams: 16, entry_fee: 0, prize_pool: '',
-                    registration_mode: ['Offline'], upi_id: ''
-                });
-                setBannerFile(null); setBannerPreview(null);
-                setQrFile(null); setQrPreview(null);
+                alert(editingId ? "Tournament updated successfully!" : "Tournament created!");
+                closeFormModal();
                 fetchTournaments();
             } else {
-                alert("Failed to create tournament.");
+                alert("Failed to save tournament.");
             }
         } catch (error) {
             alert("Server Error");
@@ -146,10 +204,9 @@ export default function TournamentsPage() {
 
     const isOnlineSelected = formData.registration_mode.includes('Online');
 
-        return (
+    return (
         <div className="animate-in fade-in duration-500 space-y-8 relative">
             
-            {/* 🌟 NEW: Conditional Rendering. If managing a bracket, show the Bracket component. Otherwise, show the Hub. */}
             {managingBracket ? (
                 <TournamentBracketManager 
                     tournament={managingBracket} 
@@ -162,7 +219,7 @@ export default function TournamentsPage() {
                             <h1 className="text-3xl font-extrabold text-slate-900">Tournament Hub</h1>
                             <p className="text-slate-500 mt-1">Manage and publish official competitions.</p>
                         </div>
-                        <button onClick={() => setIsCreating(true)} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-emerald-700 transition-all flex items-center gap-2 active:scale-95">
+                        <button onClick={() => { closeFormModal(); setIsCreating(true); }} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-emerald-700 transition-all flex items-center gap-2 active:scale-95">
                             <Plus className="w-5 h-5" /> Create Tournament
                         </button>
                     </header>
@@ -175,23 +232,15 @@ export default function TournamentsPage() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                             {tournaments.map(t => (
-                                <div key={t.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-shadow group flex flex-col relative">
-                                    
-                                    <button 
-                                        onClick={() => handleDelete(t.id, t.name)}
-                                        className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm p-2 rounded-full text-rose-500 hover:bg-rose-500 hover:text-white shadow-sm transition-colors opacity-0 group-hover:opacity-100"
-                                        title="Delete Tournament"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-
+                                <div key={t.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex flex-col relative">
                                     <div className="h-40 bg-slate-200 relative overflow-hidden">
-                                        <img src={getDriveImageUrl(t.banner_url)} alt="Banner" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                        <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 text-xs font-bold text-emerald-700 rounded-full">{t.status}</div>
+                                        <img src={getDriveImageUrl(t.banner_url)} alt="Banner" className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
+                                        <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 text-xs font-bold text-emerald-700 rounded-full shadow-sm">{t.status}</div>
                                     </div>
+                                    
                                     <div className="p-6 flex-1 flex flex-col">
-                                        <h3 className="font-extrabold text-xl text-slate-900 leading-tight mb-2">{t.name}</h3>
-                                        <div className="space-y-2 mb-4 flex-1">
+                                        <h3 className="font-extrabold text-xl text-slate-900 leading-tight mb-3">{t.name}</h3>
+                                        <div className="space-y-2 mb-6 flex-1">
                                             <p className="text-slate-600 text-sm font-medium"><MapPin className="w-4 h-4 text-blue-500 inline mr-1"/> {t.city}</p>
                                             <p className="text-slate-600 text-sm font-medium"><Calendar className="w-4 h-4 text-amber-500 inline mr-1"/> {new Date(t.start_date).toLocaleDateString()}</p>
                                             <p className="text-slate-600 text-sm font-medium">
@@ -199,29 +248,46 @@ export default function TournamentsPage() {
                                                 Entry: {t.entry_fee > 0 ? `₹${t.entry_fee}` : 'Free'}
                                             </p>
                                         </div>
-                                        <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
-                                            <span className="text-xs font-bold text-slate-400 uppercase">{t.registered_teams_count} / {t.max_teams} Teams</span>
+                                        
+                                        {/* 🌟 ACTION BUTTONS: Permanently visible and beautifully laid out */}
+                                        <div className="pt-4 border-t border-slate-100 flex flex-col gap-4">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                                                    {t.registered_teams_count || 0} / {t.max_teams} Teams
+                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    <button onClick={() => handleEditClick(t)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit Tournament">
+                                                        <Edit className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDelete(t.id, t.name)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Delete Tournament">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
                                             
-                                            {/* 🌟 This button now opens the bracket! */}
-                                            <button onClick={() => handleManageBracket(t)} className="text-emerald-600 font-bold hover:underline text-sm">
+                                            <button onClick={() => handleManageBracket(t)} className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold py-2.5 rounded-xl transition-colors text-sm">
                                                 Manage Bracket
                                             </button>
                                         </div>
+
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
 
+                    {/* MODAL FOR CREATING OR EDITING */}
                     {isCreating && (
                         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
                             <div className="bg-white w-full max-w-5xl rounded-3xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden animate-in zoom-in-95 duration-200">
                                 
                                 <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                                     <div>
-                                        <h2 className="text-2xl font-extrabold text-slate-900">Create Tournament</h2>
+                                        <h2 className="text-2xl font-extrabold text-slate-900">
+                                            {editingId ? "Edit Tournament" : "Create Tournament"}
+                                        </h2>
                                     </div>
-                                    <button onClick={() => setIsCreating(false)} className="w-8 h-8 rounded-full hover:bg-rose-100 text-slate-400 hover:text-rose-600">✕</button>
+                                    <button onClick={closeFormModal} className="w-8 h-8 rounded-full hover:bg-rose-100 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors">✕</button>
                                 </div>
 
                                 <div className="p-8 overflow-y-auto custom-scrollbar flex-1 bg-slate-50/50">
@@ -234,7 +300,7 @@ export default function TournamentsPage() {
                                             <div>
                                                 <label className="block text-sm font-bold text-slate-700 mb-2">Tournament Banner</label>
                                                 <div onClick={() => bannerInputRef.current.click()} className="w-full h-40 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center bg-slate-50 cursor-pointer overflow-hidden relative">
-                                                    {bannerPreview ? <img src={bannerPreview} className="w-full h-full object-cover" /> : <><UploadCloud className="w-8 h-8 text-slate-400 mb-2" /><span className="text-sm font-bold text-emerald-600">Upload Banner</span></>}
+                                                    {bannerPreview ? <img src={bannerPreview} className="w-full h-full object-cover" alt="Banner Preview" /> : <><UploadCloud className="w-8 h-8 text-slate-400 mb-2" /><span className="text-sm font-bold text-emerald-600">Upload Banner</span></>}
                                                     <input type="file" accept="image/*" ref={bannerInputRef} onChange={(e) => handleFileChange(e, 'banner')} className="hidden" />
                                                 </div>
                                             </div>
@@ -299,7 +365,7 @@ export default function TournamentsPage() {
                                                     <div>
                                                         <label className="block text-sm font-bold text-blue-900 mb-2">Upload Payment QR Code</label>
                                                         <div onClick={() => qrInputRef.current.click()} className="w-full h-32 border-2 border-dashed border-blue-300 rounded-xl flex items-center justify-center bg-white cursor-pointer overflow-hidden">
-                                                            {qrPreview ? <img src={qrPreview} className="h-full object-contain" /> : <span className="text-sm font-bold text-blue-600 flex items-center gap-2"><UploadCloud className="w-5 h-5"/> Select QR Image</span>}
+                                                            {qrPreview ? <img src={qrPreview} className="h-full object-contain" alt="QR Preview" /> : <span className="text-sm font-bold text-blue-600 flex items-center gap-2"><UploadCloud className="w-5 h-5"/> Select QR Image</span>}
                                                             <input type="file" accept="image/*" ref={qrInputRef} onChange={(e) => handleFileChange(e, 'qr')} className="hidden" />
                                                         </div>
                                                     </div>
@@ -310,9 +376,9 @@ export default function TournamentsPage() {
                                 </div>
 
                                 <div className="px-8 py-5 border-t border-slate-100 bg-white flex justify-end gap-3">
-                                    <button type="button" onClick={() => setIsCreating(false)} className="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100">Cancel</button>
-                                    <button type="submit" form="tourney-form" disabled={isSubmitting} className="px-8 py-3 rounded-xl font-bold text-white bg-emerald-600 disabled:opacity-70">
-                                        {isSubmitting ? "Publishing..." : "Publish Tournament"}
+                                    <button type="button" onClick={closeFormModal} className="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancel</button>
+                                    <button type="submit" form="tourney-form" disabled={isSubmitting} className="px-8 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-70 transition-colors">
+                                        {isSubmitting ? "Saving..." : (editingId ? "Save Changes" : "Publish Tournament")}
                                     </button>
                                 </div>
                             </div>
