@@ -20,6 +20,7 @@ import RefereePage from '../components/RefereePage';
 ========================================================================= */
  const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
 
+
 /* =========================================================================
    1. EXISTING APPLICATIONS MODULE
 ========================================================================= */
@@ -31,6 +32,9 @@ const ApplicationsView = () => {
     
     const [aadhaarVerified, setAadhaarVerified] = useState(false);
     const [aadhaarScreenshot, setAadhaarScreenshot] = useState(null);
+    
+    // 🌟 NEW: Search Query State
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         fetchPlayers();
@@ -92,6 +96,12 @@ const ApplicationsView = () => {
         }
     };
 
+    // 🌟 NEW: Filter logic for the search bar
+    const filteredPlayers = players.filter(player => 
+        player.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        player.aadhaar_number?.includes(searchQuery)
+    );
+
     if (loading) {
         return (
             <div className="flex-1 flex flex-col justify-center items-center h-96">
@@ -103,25 +113,41 @@ const ApplicationsView = () => {
 
     return (
         <div className="animate-in fade-in duration-500">
-            <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <div>
-                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Applications Review</h1>
-                    <p className="text-slate-500 mt-1">Review and approve pending player applications.</p>
+            {/* 🌟 UPDATED HEADER: Now includes the Search Bar */}
+            <header className="mb-8 flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Applications Review</h1>
+                        <p className="text-slate-500 mt-1">Review and approve pending player applications.</p>
+                    </div>
+                    <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg font-semibold border border-emerald-100 flex items-center gap-2 shrink-0">
+                        <span>Pending Applications:</span>
+                        <span className="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-md">{players.length}</span>
+                    </div>
                 </div>
-                <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg font-semibold border border-emerald-100 flex items-center gap-2">
-                    <span>Pending Applications:</span>
-                    <span className="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-md">{players.length}</span>
+
+                <div className="relative w-full mt-2">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search applicants by name or Aadhaar number..."
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl shadow-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white text-sm font-medium transition-all"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                 </div>
             </header>
 
-            {players.length === 0 ? (
+            {filteredPlayers.length === 0 ? (
                 <div className="text-center bg-white rounded-2xl p-12 shadow-sm border border-slate-100 text-slate-500">
                     <FileText className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                    <p className="text-lg font-medium">No pending players to review at this time.</p>
+                    <p className="text-lg font-medium">
+                        {players.length > 0 ? "No applicants found matching your search." : "No pending players to review at this time."}
+                    </p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {players.map(player => (
+                    {filteredPlayers.map(player => (
                         <div key={player.id} className="bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 transform hover:-translate-y-1 flex flex-col overflow-hidden">
                             <div className="p-6 flex items-start gap-4 flex-grow">
                                 <img src={getDriveImageUrl(player.player_photo_url)} alt={player.full_name} className="w-16 h-16 rounded-full object-cover shadow-sm border-2 border-slate-50" onError={(e) => { e.target.src = "https://placehold.co/150x150?text=No+Photo"; }} />
@@ -160,14 +186,21 @@ const ApplicationsView = () => {
                                 </div>
                             </div>
 
-                            {/* 🌟 THIS IS THE 2-COLUMN GRID 🌟 */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <div className="space-y-8">
                                     <section>
                                         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4"><span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Personal & Contact</h3>
                                         <div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100">
                                             <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Aadhaar No.</span> <span className="font-black text-emerald-700 tracking-widest">{viewPlayer.aadhaar_number || "N/A"}</span></p>
-                                            <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">DOB</span> <span className="font-semibold text-slate-900">{viewPlayer.dob}</span></p>
+                                            
+                                            {/* 🌟 FIXED: Formatted DOB to DD-MM-YYYY 🌟 */}
+                                            <p className="flex justify-between border-b border-slate-200 pb-2">
+                                                <span className="text-slate-500 uppercase font-bold text-xs">DOB</span> 
+                                                <span className="font-semibold text-slate-900">
+                                                    {viewPlayer.dob ? new Date(viewPlayer.dob).toLocaleDateString('en-GB').replace(/\//g, '-') : "N/A"}
+                                                </span>
+                                            </p>
+                                            
                                             <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Location</span> <span className="font-semibold text-slate-900">{viewPlayer.city}, {viewPlayer.district}</span></p>
                                             <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Email</span> <span className="font-semibold text-slate-900">{viewPlayer.email}</span></p>
                                             <p className="flex justify-between"><span className="text-slate-500 uppercase font-bold text-xs">Phone</span> <span className="font-semibold text-slate-900">{viewPlayer.phone}</span></p>
@@ -180,25 +213,25 @@ const ApplicationsView = () => {
                                             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                                                 <p className="font-semibold mb-3 text-slate-700">Gov Document 1</p>
                                                 {viewPlayer.gov_doc_1_url ? (
-                                                    <iframe src={viewPlayer.gov_doc_1_url} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Gov Doc 1"></iframe>
+                                                    <iframe src={getDriveImageUrl(viewPlayer.gov_doc_1_url)} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Gov Doc 1"></iframe>
                                                 ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
                                             </div>
                                             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                                                 <p className="font-semibold mb-3 text-slate-700">Gov Document 2</p>
                                                 {viewPlayer.gov_doc_2_url ? (
-                                                    <iframe src={viewPlayer.gov_doc_2_url} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Gov Doc 2"></iframe>
+                                                    <iframe src={getDriveImageUrl(viewPlayer.gov_doc_2_url)} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Gov Doc 2"></iframe>
                                                 ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
                                             </div>
                                             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                                                 <p className="font-semibold mb-3 text-slate-700">Gov Document 3</p>
                                                 {viewPlayer.gov_doc_3_url ? (
-                                                    <iframe src={viewPlayer.gov_doc_3_url} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Gov Doc 3"></iframe>
+                                                    <iframe src={getDriveImageUrl(viewPlayer.gov_doc_3_url)} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Gov Doc 3"></iframe>
                                                 ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
                                             </div>
                                             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                                                 <p className="font-semibold mb-3 text-slate-700">Fitness Certificate</p>
                                                 {viewPlayer.fitness_certificate_url ? (
-                                                    <iframe src={viewPlayer.fitness_certificate_url} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Fitness Certificate"></iframe>
+                                                    <iframe src={getDriveImageUrl(viewPlayer.fitness_certificate_url)} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Fitness Certificate"></iframe>
                                                 ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
                                             </div>
                                         </div>
@@ -309,7 +342,7 @@ const ApplicationsView = () => {
                             {/* 🌟 FULL WIDTH AADHAAR VERIFICATION BAR 🌟 */}
                             <div className="mt-8 bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
                                 <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
-                                    <Shield className="w-5 h-5" /> Mandatory Aadhaar Verification Step
+                                    <Shield className="w-5 h-5" /> Mandatory Verification Step
                                 </h3>
                                 
                                 <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
@@ -330,7 +363,7 @@ const ApplicationsView = () => {
                                             className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 border-emerald-300" 
                                         />
                                         <span className="flex items-center gap-1.5">
-                                            I verify <span className="font-black text-emerald-700">{viewPlayer.aadhaar_number}</span>
+                                            I verify <span className="font-black text-emerald-700">{viewPlayer.aadhaar_number || "ID Document"}</span>
                                         </span>
                                     </label>
 
