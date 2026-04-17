@@ -9,6 +9,7 @@ const PlayerProfileForm = () => {
     const storedUser = localStorage.getItem("currentUser");
     const currentUser = storedUser ? JSON.parse(storedUser) : null;
     const playerId = currentUser?.id || null;
+    const playerPhone = currentUser?.phone || ""; // 🌟 NEW: Extract phone from login session
 
     const [loading, setLoading] = useState(false);
     const [clubs, setClubs] = useState([]); 
@@ -39,7 +40,7 @@ const PlayerProfileForm = () => {
         district: "",
         pincode: "",
         email: "",
-        phone: "",
+        phone: playerPhone, // 🌟 NEW: Initialize with the phone number from login
         emergency_contact_name: "",
         emergency_contact_phone: "",
         club_applied: "", 
@@ -80,7 +81,7 @@ const PlayerProfileForm = () => {
         navigate("/login");
     };
 
-    // 🌟 HELPER FUNCTION: Calculate exact age based on DOB
+    // HELPER FUNCTION: Calculate exact age based on DOB
     const calculateAge = (dobString) => {
         if (!dobString) return "";
         const birthDate = new Date(dobString);
@@ -88,7 +89,6 @@ const PlayerProfileForm = () => {
         let age = today.getFullYear() - birthDate.getFullYear();
         const monthDiff = today.getMonth() - birthDate.getMonth();
         
-        // If the birth month hasn't happened yet this year, or it's the birth month but the day hasn't happened yet, subtract 1
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
             age--;
         }
@@ -101,7 +101,6 @@ const PlayerProfileForm = () => {
         setFormData(prev => {
             const newData = { ...prev, [name]: value };
             
-            // 🌟 NEW: Automatically calculate Age if DOB is changed
             if (name === "dob") {
                 newData.age = calculateAge(value);
             }
@@ -188,7 +187,6 @@ const PlayerProfileForm = () => {
     const inputClasses = "w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all duration-200 text-slate-800 font-medium placeholder:text-slate-400 placeholder:font-normal";
     const labelClasses = "block text-slate-700 text-sm font-bold mb-2 ml-1 tracking-wide";
     
-    // Check if player is 18 or older
     const isAdult = parseInt(formData.age) >= 18;
 
     return (
@@ -231,7 +229,6 @@ const PlayerProfileForm = () => {
                             </div>
                             <div>
                                 <label className={labelClasses}>Age</label>
-                                {/* 🌟 UPDATED: Made Age read-only so they don't mess up the calculation! */}
                                 <input type="number" name="age" placeholder="Calculated from DOB" value={formData.age} className={`${inputClasses} bg-slate-100 cursor-not-allowed text-slate-500`} readOnly required />
                             </div>
                             <div>
@@ -349,7 +346,8 @@ const PlayerProfileForm = () => {
                             </div>
                             <div>
                                 <label className={labelClasses}>Phone Number</label>
-                                <input type="tel" name="phone" placeholder="Mobile Number" value={formData.phone} onChange={handleChange} className={inputClasses} required />
+                                {/* 🌟 UPDATED: Read-only, pre-filled phone number */}
+                                <input type="tel" name="phone" value={formData.phone} className={`${inputClasses} bg-slate-100 cursor-not-allowed text-slate-500`} readOnly required />
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
