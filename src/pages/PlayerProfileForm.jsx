@@ -9,7 +9,7 @@ const PlayerProfileForm = () => {
     const storedUser = localStorage.getItem("currentUser");
     const currentUser = storedUser ? JSON.parse(storedUser) : null;
     const playerId = currentUser?.id || null;
-    const playerPhone = currentUser?.phone || ""; // 🌟 NEW: Extract phone from login session
+    const playerPhone = currentUser?.phone || ""; 
 
     const [loading, setLoading] = useState(false);
     const [clubs, setClubs] = useState([]); 
@@ -40,7 +40,7 @@ const PlayerProfileForm = () => {
         district: "",
         pincode: "",
         email: "",
-        phone: playerPhone, // 🌟 NEW: Initialize with the phone number from login
+        phone: playerPhone, 
         emergency_contact_name: "",
         emergency_contact_phone: "",
         club_applied: "", 
@@ -76,9 +76,10 @@ const PlayerProfileForm = () => {
         loadClubs();
     }, [playerId, navigate]);
 
+    // 🌟 FIXED: Using window.location.href stops the rapid redirect loop (shaking)
     const handleLogout = () => {
         localStorage.removeItem("currentUser");
-        navigate("/login");
+        window.location.href = "/login";
     };
 
     // HELPER FUNCTION: Calculate exact age based on DOB
@@ -346,7 +347,6 @@ const PlayerProfileForm = () => {
                             </div>
                             <div>
                                 <label className={labelClasses}>Phone Number</label>
-                                {/* 🌟 UPDATED: Read-only, pre-filled phone number */}
                                 <input type="tel" name="phone" value={formData.phone} className={`${inputClasses} bg-slate-100 cursor-not-allowed text-slate-500`} readOnly required />
                             </div>
                         </div>
