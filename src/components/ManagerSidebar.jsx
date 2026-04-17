@@ -4,8 +4,6 @@ import { LayoutDashboard, ClipboardList, Shield, Users, Trophy, UserCircle, Sett
 // 🌟 THE HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
 const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
 
-
-// 🌟 Added pendingTrialsCount AND clubInfo to the props here!
 export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, handleLogout, pendingTrialsCount = 0, clubInfo }) {
     const navItems = [
         { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -26,11 +24,11 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
             <div className="h-20 flex items-center justify-between px-6 border-b border-slate-800">
                 <div className="flex items-center gap-3">
                     
-                    {/* 🌟 DYNAMIC LOGO OR FALLBACK SHIELD */}
-                    {clubInfo?.logo_url ? (
+                    {/* 🌟 FIXED: Looking for clubInfo.logo instead of logo_url */}
+                    {clubInfo?.logo ? (
                         <div className="w-10 h-10 bg-white rounded-xl p-0.5 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden shrink-0">
                             <img 
-                                src={getDriveImageUrl(clubInfo.logo_url)} 
+                                src={getDriveImageUrl(clubInfo.logo)} 
                                 alt={clubInfo.name} 
                                 className="w-full h-full object-contain rounded-lg"
                                 onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/150x150?text=Logo"; }}
@@ -42,12 +40,10 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
                         </div>
                     )}
 
-                    {/* 🌟 DYNAMIC CLUB NAME OR FALLBACK TEXT */}
                     <div className="flex flex-col truncate">
                         <span className="text-xl font-extrabold tracking-tight truncate" title={clubInfo?.name || "DHSA Secretary"}>
                             {clubInfo ? clubInfo.name : "DHSA Secretary"}
                         </span>
-                        {/* Optionally show the city if it's a specific club */}
                         {clubInfo?.city && (
                             <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider leading-none mt-0.5 truncate">
                                 {clubInfo.city}
@@ -79,7 +75,6 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
                             <div className="flex items-center gap-2">
                                 {item.label}
                                 
-                                {/* 🌟 NOTIFICATION BADGE LOGIC HERE */}
                                 {item.id === "Assigned Trials" && pendingTrialsCount > 0 && (
                                     <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm shadow-rose-500/30 animate-pulse">
                                         {pendingTrialsCount}
