@@ -554,9 +554,14 @@ const TransferHistoryPage = () => {
         fetchHistory();
     }, []);
 
-    const filteredHistory = history.filter(record => 
-        record.player_name?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // 🌟 FIXED: Now searches by Name OR Phone Number
+    const filteredHistory = history.filter(record => {
+        const query = searchQuery.toLowerCase();
+        const nameMatch = record.player_name?.toLowerCase().includes(query);
+        const phoneMatch = record.player_phone?.includes(query); // Assuming backend sends player_phone
+        
+        return nameMatch || phoneMatch;
+    });
 
     if (loading) {
         return (
@@ -583,9 +588,10 @@ const TransferHistoryPage = () => {
 
                 <div className="relative w-full mt-2">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    {/* 🌟 UPDATED PLACEHOLDER */}
                     <input
                         type="text"
-                        placeholder="Search transfers by player name..."
+                        placeholder="Search transfers by player name or phone number..."
                         className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl shadow-sm outline-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white text-sm font-medium transition-all"
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -605,6 +611,8 @@ const TransferHistoryPage = () => {
                                 <tr>
                                     <th className="px-6 py-4">Date</th>
                                     <th className="px-6 py-4">Player</th>
+                                    {/* 🌟 ADDED PHONE COLUMN */}
+                                    <th className="px-6 py-4">Phone</th>
                                     <th className="px-6 py-4">Transfer Path</th>
                                     <th className="px-6 py-4 text-center">NOC Document</th>
                                 </tr>
@@ -624,9 +632,14 @@ const TransferHistoryPage = () => {
                                                     src={getDriveImageUrl(record.player_photo)} 
                                                     alt={record.player_name} 
                                                     className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm bg-slate-100"
+                                                    onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/150x150?text=No+Photo"; }}
                                                 />
                                                 <span className="font-bold text-slate-900">{record.player_name}</span>
                                             </div>
+                                        </td>
+                                        {/* 🌟 ADDED PHONE DATA */}
+                                        <td className="px-6 py-4 font-semibold text-slate-700">
+                                            {record.player_phone || "N/A"}
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
