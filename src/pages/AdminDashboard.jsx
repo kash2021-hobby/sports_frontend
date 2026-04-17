@@ -18,7 +18,7 @@ import RefereePage from '../components/RefereePage';
 /* =========================================================================
    GOOGLE DRIVE HELPER
 ========================================================================= */
- const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+ const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
 
 
 /* =========================================================================
@@ -33,7 +33,7 @@ const ApplicationsView = () => {
     const [aadhaarVerified, setAadhaarVerified] = useState(false);
     const [aadhaarScreenshot, setAadhaarScreenshot] = useState(null);
     
-    // 🌟 NEW: Search Query State
+    // Search Query State
     const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
@@ -96,7 +96,7 @@ const ApplicationsView = () => {
         }
     };
 
-    // 🌟 NEW: Filter logic for the search bar
+    // Filter logic for the search bar
     const filteredPlayers = players.filter(player => 
         player.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         player.aadhaar_number?.includes(searchQuery)
@@ -113,7 +113,7 @@ const ApplicationsView = () => {
 
     return (
         <div className="animate-in fade-in duration-500">
-            {/* 🌟 UPDATED HEADER: Now includes the Search Bar */}
+            {/* Header with Search Bar */}
             <header className="mb-8 flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -193,7 +193,7 @@ const ApplicationsView = () => {
                                         <div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100">
                                             <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Aadhaar No.</span> <span className="font-black text-emerald-700 tracking-widest">{viewPlayer.aadhaar_number || "N/A"}</span></p>
                                             
-                                            {/* 🌟 FIXED: Formatted DOB to DD-MM-YYYY 🌟 */}
+                                            {/* Cleanly formatted DOB only */}
                                             <p className="flex justify-between border-b border-slate-200 pb-2">
                                                 <span className="text-slate-500 uppercase font-bold text-xs">DOB</span> 
                                                 <span className="font-semibold text-slate-900">
@@ -337,56 +337,56 @@ const ApplicationsView = () => {
                                     )}
                                 </div>
                             </div>
-                            {/* 🌟 END OF 2-COLUMN GRID 🌟 */}
+                            
+                            {/* Verification Bar */}
+                            <div className="mt-8 bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+                                <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
+                                    <Shield className="w-5 h-5" /> Mandatory Verification Step
+                                </h3>
+                                
+                                <div className="flex flex-col lg:flex-row items-start lg:items-end gap-4">
+                                    <a 
+                                        href="https://myaadhaar.uidai.gov.in/genricDownloadAadhaar/en" 
+                                        target="_blank" 
+                                        rel="noreferrer" 
+                                        className="bg-white border border-emerald-200 text-emerald-700 px-6 py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2 shrink-0 w-full lg:w-auto h-[46px]"
+                                    >
+                                        <ExternalLink className="w-4 h-4" /> Visit UIDAI Portal
+                                    </a>
 
-                           {/* 🌟 FULL WIDTH VERIFICATION BAR 🌟 */}
-                                <div className="mt-8 bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
-                                    <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
-                                        <Shield className="w-5 h-5" /> Mandatory Verification Step
-                                    </h3>
-                                    
-                                    {/* Changed items-center to items-end on desktop so the label aligns nicely */}
-                                    <div className="flex flex-col lg:flex-row items-start lg:items-end gap-4">
-                                        <a 
-                                            href="https://myaadhaar.uidai.gov.in/genricDownloadAadhaar/en" 
-                                            target="_blank" 
-                                            rel="noreferrer" 
-                                            className="bg-white border border-emerald-200 text-emerald-700 px-6 py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2 shrink-0 w-full lg:w-auto h-[46px]"
-                                        >
-                                            <ExternalLink className="w-4 h-4" /> Visit UIDAI Portal
-                                        </a>
+                                    <label className="flex items-center justify-center gap-3 cursor-pointer text-sm font-semibold text-slate-700 bg-white px-6 py-3 rounded-xl border border-emerald-200 shadow-sm w-full lg:w-auto shrink-0 h-[46px]">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={aadhaarVerified} 
+                                            onChange={e => setAadhaarVerified(e.target.checked)} 
+                                            className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 border-emerald-300" 
+                                        />
+                                        <span className="flex items-center gap-1.5">
+                                            I verify <span className="font-black text-emerald-700">{viewPlayer.aadhaar_number || "ID Document"}</span>
+                                        </span>
+                                    </label>
 
-                                        <label className="flex items-center justify-center gap-3 cursor-pointer text-sm font-semibold text-slate-700 bg-white px-6 py-3 rounded-xl border border-emerald-200 shadow-sm w-full lg:w-auto shrink-0 h-[46px]">
-                                            <input 
-                                                type="checkbox" 
-                                                checked={aadhaarVerified} 
-                                                onChange={e => setAadhaarVerified(e.target.checked)} 
-                                                className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 border-emerald-300" 
-                                            />
-                                            <span className="flex items-center gap-1.5">
-                                                I verify <span className="font-black text-emerald-700">{viewPlayer.aadhaar_number || "ID Document"}</span>
-                                            </span>
+                                    {/* 🌟 NEW: Label added and inputs aligned beautifully! */}
+                                    <div className="flex-1 w-full flex flex-col gap-1.5">
+                                        <label className="text-xs font-bold text-slate-600 uppercase tracking-wide ml-1">
+                                            Upload Verified Screenshot / PDF of the Aadhaar
                                         </label>
-
-                                        {/* 🌟 NEW: Added the label and wrapped the input inside a flex column */}
-                                        <div className="flex-1 w-full flex flex-col gap-1.5">
-                                            <label className="text-xs font-bold text-slate-600 uppercase tracking-wide ml-1">
-                                                Upload Verified Screenshot / PDF of the Aadhaar
-                                            </label>
-                                            <div className="relative group w-full">
-                                                <input 
-                                                    type="file" 
-                                                    accept="image/*,.pdf" 
-                                                    onChange={e => setAadhaarScreenshot(e.target.files[0])} 
-                                                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition-colors cursor-pointer bg-white border border-emerald-200 rounded-xl shadow-sm h-[46px]" 
-                                                />
-                                                {aadhaarScreenshot && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 text-emerald-500 bg-white rounded-full" />}
-                                            </div>
+                                        <div className="relative group w-full">
+                                            <input 
+                                                type="file" 
+                                                accept="image/*,.pdf" 
+                                                onChange={e => setAadhaarScreenshot(e.target.files[0])} 
+                                                className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition-colors cursor-pointer bg-white border border-emerald-200 rounded-xl shadow-sm h-[46px]" 
+                                            />
+                                            {aadhaarScreenshot && <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 text-emerald-500 bg-white rounded-full" />}
                                         </div>
                                     </div>
                                 </div>
+                            </div>
                             
-                        {/* 🌟 ACTION BAR */}
+                        </div>
+
+                        {/* Action Bar */}
                         <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 rounded-b-2xl">
                             <div className="flex items-center gap-3 w-full sm:w-auto">
                                 <label className="text-sm font-bold text-slate-700 uppercase tracking-wide">Action:</label>
