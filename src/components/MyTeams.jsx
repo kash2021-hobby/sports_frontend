@@ -2,22 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Plus, Trash2, Edit, AlertCircle, CheckCircle, Users, Palette, Shirt } from 'lucide-react';
 
 // 🌟 THE HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
-const getDriveImageUrl = (url) => { 
-    if (!url) return "https://placehold.co/150x150?text=No+Photo"; 
-    const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); 
-    const fileId = match ? match[1] : null; 
-    if (!fileId) return url; 
-    return `https://drive.google.com/uc?export=view&id=${fileId}`; 
-};
+const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
 
-// 🌟 FIXED: Renamed component to MyTeams to prevent export conflicts
 export default function MyTeams({ clubId }) {
     const [existingTeam, setExistingTeam] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    // 🌟 NEW: State to store the club's name
+    const [clubName, setClubName] = useState("Your Club");
+
     // Modal & Form States
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [isEditing, setIsEditing] = useState(false); // Track edit mode
+    const [isEditing, setIsEditing] = useState(false); 
     const [approvedPlayers, setApprovedPlayers] = useState([]);
     const [teamDetails, setTeamDetails] = useState({ name: "", jerseyColor: "" });
 
@@ -33,8 +29,27 @@ export default function MyTeams({ clubId }) {
         if (clubId) {
             fetchTeamData();
             fetchApprovedPlayers();
+            fetchClubName(); // 🌟 NEW: Fetch the club name on load
         }
     }, [clubId]);
+
+    // 🌟 NEW: Function to get the club name so we don't have to ask the user
+    const fetchClubName = async () => {
+        try {
+            const res = await fetch(`https://backend.dhsa.co.in/clubs`);
+            if (res.ok) {
+                const data = await res.json();
+                const myClub = data.find(c => parseInt(c.id) === parseInt(clubId));
+                if (myClub) {
+                    setClubName(myClub.name);
+                    // Pre-fill the team details with the club name
+                    setTeamDetails(prev => ({ ...prev, name: myClub.name }));
+                }
+            }
+        } catch (error) {
+            console.error("Failed to fetch club name:", error);
+        }
+    };
 
     const fetchTeamData = async () => {
         try {
@@ -65,7 +80,8 @@ export default function MyTeams({ clubId }) {
 
     // HELPER: Reset Form
     const resetForm = () => {
-        setTeamDetails({ name: "", jerseyColor: "" });
+        // 🌟 UPDATED: Always default the name to the club name
+        setTeamDetails({ name: clubName, jerseyColor: "" });
         setSelectedPlayers({});
         setIsEditing(false);
         setShowCreateModal(false);
@@ -168,7 +184,7 @@ export default function MyTeams({ clubId }) {
         setIsSubmitting(true);
         const payload = {
             club_id: clubId,
-            name: teamDetails.name,
+            name: teamDetails.name || clubName, // 🌟 Ensure we send the club name
             jersey_color: teamDetails.jerseyColor,
             roster: selectedPlayers 
         };
@@ -328,14 +344,16 @@ export default function MyTeams({ clubId }) {
                                 <section className="grid md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-bold text-slate-700 mb-2">Team Name</label>
+                                        {/* 🌟 UPDATED: Read-only input showing the Club Name automatically */}
                                         <input
                                             type="text"
-                                            required
-                                            placeholder="E.g., Elite FC Seniors"
-                                            className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-medium"
-                                            value={teamDetails.name}
-                                            onChange={e => setTeamDetails({ ...teamDetails, name: e.target.value })}
+                                            readOnly
+                                            className="w-full bg-slate-100 border border-slate-200 p-4 rounded-xl font-bold text-slate-600 cursor-not-allowed"
+                                            value={teamDetails.name || clubName}
                                         />
+                                        <p className="text-[11px] font-bold text-slate-400 mt-1.5 ml-1 uppercase tracking-wide">
+                                            Auto-assigned based on your club.
+                                        </p>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2"><Palette className="w-4 h-4" /> Primary Jersey Color</label>
