@@ -40,14 +40,14 @@ export default function PlayerDashboard() {
                 setPlayerData(profileRes.data);
 
                 // 2. Fetch Player Stats
-                const statsRes = await fetch(`http://localhost:5000/players/${user.id}/stats`);
+                const statsRes = await fetch(`https://backend.dhsa.co.in/players/${user.id}/stats`);
                 if (statsRes.ok) {
                     const statsData = await statsRes.json();
                     setStats(statsData);
                 }
 
                 // 3. Fetch Upcoming Matches
-                const matchesRes = await fetch(`http://localhost:5000/players/${user.id}/matches`);
+                const matchesRes = await fetch(`https://backend.dhsa.co.in/players/${user.id}/matches`);
                 if (matchesRes.ok) {
                     const matchesData = await matchesRes.json();
                     
