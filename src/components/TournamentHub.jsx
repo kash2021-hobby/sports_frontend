@@ -18,27 +18,31 @@ export default function TournamentHub({ clubId }) {
     const [receiptPreview, setReceiptPreview] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
-        if (clubId) {
-            fetchData();
-        }
+   const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+
+    // 🌟 MOVED fetchData INSIDE useEffect TO FIX HOISTING/BUILD ERRORS
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // Fetch Tournaments
+                const tourneyRes = await fetch("https://backend.dhsa.co.in/tournaments");
+                if (tourneyRes.ok) setTournaments(await tourneyRes.json());
+
+                // Fetch Manager's Permanent Team
+                if (clubId) {
+                    const teamRes = await fetch(`https://backend.dhsa.co.in/manager/team/${clubId}`);
+                    if (teamRes.ok) setMyTeam(await teamRes.json());
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
     }, [clubId]);
-
-    const fetchData = async () => {
-        try {
-            // Fetch Tournaments
-            const tourneyRes = await fetch("https://backend.dhsa.co.in/tournaments");
-            if (tourneyRes.ok) setTournaments(await tourneyRes.json());
-
-            // Fetch Manager's Permanent Team
-            const teamRes = await fetch(`https://backend.dhsa.co.in/manager/team/${clubId}`);
-            if (teamRes.ok) setMyTeam(await teamRes.json());
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     // Toggle player selection for Starters (Max 11)
     const toggleStarter = (playerId) => {
@@ -115,7 +119,7 @@ export default function TournamentHub({ clubId }) {
         }
     };
 
-    // 🌟 HELPER TO CHECK DEADLINE
+    // HELPER TO CHECK DEADLINE
     const isDeadlinePassed = (deadlineStr) => {
         if (!deadlineStr) return false;
         const deadlineDate = new Date(deadlineStr);
@@ -163,7 +167,6 @@ export default function TournamentHub({ clubId }) {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {tournaments.map(t => {
                     const deadlinePassed = isDeadlinePassed(t.registration_deadline);
-                    // 🌟 BOTH conditions must be true to register!
                     const canRegister = t.status === "Registration Open" && !deadlinePassed;
 
                     return (
@@ -194,7 +197,7 @@ export default function TournamentHub({ clubId }) {
                                     <p className="text-slate-600 text-sm font-medium flex items-center gap-2"><Coins className="w-4 h-4 text-slate-400"/> Entry: {t.entry_fee > 0 ? `₹${t.entry_fee}` : 'Free'}</p>
                                 </div>
                                 
-                                {/* 🌟 DYNAMIC BUTTON LOGIC */}
+                                {/* DYNAMIC BUTTON LOGIC */}
                                 {canRegister ? (
                                     <button 
                                         onClick={() => { setSelectedTournament(t); setStep(1); }}
