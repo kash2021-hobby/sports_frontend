@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, UserCircle, FileText, Activity, Trophy, X, Phone, Calendar, Ruler, Building2, ArrowRightLeft, Upload, Printer, ShieldCheck } from 'lucide-react';
+import { Search, UserCircle, FileText, Activity, Trophy, X, Phone, Calendar, Ruler, Building2, ArrowRightLeft, Upload, Printer } from 'lucide-react';
 import API from '../services/api';
 
 export default function PlayersPage() {
@@ -71,8 +71,9 @@ export default function PlayersPage() {
         }
     };
 
-   const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
-    // HORIZONTAL SINGLE-SIDED ID CARD (WITH FIXED LOGO)
+    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
+
+    // 🌟 REWRITTEN: HORIZONTAL SINGLE-SIDED ID CARD (WITH FIXED COMPLETE LOGO)
     const generateIdCard = () => {
         if (!viewPlayer) return;
 
@@ -132,10 +133,10 @@ export default function PlayersPage() {
                             border-bottom: 3px solid #000;
                         }
 
-                        /* FIXED LOGO STYLES */
+                        /* 🌟 FIXED LOGO STYLES (NO NESTED CLIPPING) */
                         .logo-circle {
-                            width: 150px;
-                            height: 150px;
+                            width: 100px;
+                            height: 100px;
                             background: #fff;
                             border-radius: 50%;
                             border: 2px solid #000;
@@ -144,15 +145,15 @@ export default function PlayersPage() {
                             justify-content: center;
                             flex-shrink: 0;
                             margin-right: 25px;
-                            overflow: hidden;
+                            overflow: hidden; /* NEATLY MASKS THE CORNERS OF THE RECTANGULAR IMAGE FILE */
                             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
                         }
                         
                         .logo-circle img {
-                            width: 72%; 
-                            height: 72%;
+                            width: 80%; /* 🌟 Gives more breathing room so edges don't cut off */
+                            height: 80%;
                             object-fit: contain; 
-                            border-radius: 50%;
+                            /* border-radius: 50%; /* 🌟 REMOVE THIS as it clips the circular design near its perimeter text */
                         }
 
                         .header-text {
@@ -459,7 +460,7 @@ export default function PlayersPage() {
                                     onClick={generateIdCard}
                                     className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex justify-center items-center gap-2 transition-colors shadow-md"
                                 >
-                                    <Printer size={16} /> Print ID
+                                    <Printer size={16} /> Generate Pass
                                 </button>
                                 <button 
                                     onClick={() => setIsTransferModalOpen(true)}
@@ -495,12 +496,6 @@ export default function PlayersPage() {
                                     <DocItem label="Gov Document 2" url={viewPlayer.gov_doc_2_url} />
                                     <DocItem label="Gov Document 3" url={viewPlayer.gov_doc_3_url} />
                                     <DocItem label="Fitness Certificate" url={viewPlayer.fitness_certificate_url} />
-                                    {/* 🌟 NEW: Verified Aadhaar Screenshot added here */}
-                                    <DocItem 
-                                        label="Verified Aadhaar (Admin)" 
-                                        url={viewPlayer.aadhaar_verified_url} 
-                                        iconOverride={<ShieldCheck size={14} className="text-blue-500" />}
-                                    />
                                 </div>
                             )}
                         </div>
@@ -596,10 +591,10 @@ const InfoItem = ({ label, value, icon }) => (
     </div>
 );
 
-const DocItem = ({ label, url, iconOverride }) => (
+const DocItem = ({ label, url }) => (
     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
         <p className="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
-            {iconOverride || <FileText size={14} className="text-emerald-500" />} {label}
+            <FileText size={14} className="text-emerald-500" /> {label}
         </p>
         {url ? (
             <iframe src={url} className="w-full h-48 rounded-xl bg-white border border-slate-200" title={label} />
