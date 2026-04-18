@@ -76,13 +76,11 @@ const PlayerProfileForm = () => {
         loadClubs();
     }, [playerId, navigate]);
 
-    // 🌟 FIXED: Using window.location.href stops the rapid redirect loop (shaking)
     const handleLogout = () => {
         localStorage.removeItem("currentUser");
         window.location.href = "/login";
     };
 
-    // HELPER FUNCTION: Calculate exact age based on DOB
     const calculateAge = (dobString) => {
         if (!dobString) return "";
         const birthDate = new Date(dobString);
@@ -188,6 +186,7 @@ const PlayerProfileForm = () => {
     const inputClasses = "w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all duration-200 text-slate-800 font-medium placeholder:text-slate-400 placeholder:font-normal";
     const labelClasses = "block text-slate-700 text-sm font-bold mb-2 ml-1 tracking-wide";
     
+    // 🌟 Determines if they are 18 or older
     const isAdult = parseInt(formData.age) >= 18;
 
     return (
@@ -442,8 +441,11 @@ const PlayerProfileForm = () => {
                                 <input type="file" name="gov_doc_1" onChange={handleFileChange} required className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-colors border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
                             </div>
 
+                            {/* 🌟 DYNAMIC LABEL BASED ON AGE */}
                             <div className="space-y-2">
-                                <label className={labelClasses}>Gov Document 2 (e.g., PAN Card/Birth Certificate) <span className="text-rose-500">*</span></label>
+                                <label className={labelClasses}>
+                                    {isAdult ? "Upload PAN Card" : "Upload Birth Certificate (Under 18)"} <span className="text-rose-500">*</span>
+                                </label>
                                 <input type="file" name="gov_doc_2" onChange={handleFileChange} required className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-colors border border-slate-200 rounded-xl bg-slate-50 cursor-pointer" />
                             </div>
 
