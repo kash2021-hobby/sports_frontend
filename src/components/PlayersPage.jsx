@@ -296,15 +296,15 @@ export default function PlayersPage() {
                     
                     <div class="id-card">
                         
-                        <div class="header">
-                            <div class="logo-circle">
-                                <span>DHSA<br>LOGO</span>
-                            </div>
-                            <div class="header-text">
-                                <h1>DIMA HASAO SPORTS ASSOCIATION</h1>
-                                <h2>OFFICIAL REGISTRATION PORTAL</h2>
-                            </div>
-                        </div>
+                        <<div class="header">
+    <div class="logo-circle">
+        <img src="https://hub.dhsa.co.in/assets/dhsa_logo-C7UT0L8w.jpeg" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;" alt="DHSA Logo" />
+    </div>
+    <div class="header-text">
+        <h1>DIMA HASAO SPORTS ASSOCIATION</h1>
+        <h2>OFFICIAL REGISTRATION PORTAL</h2>
+    </div>
+</div>
 
                         <div class="pass-banner">
                             PLAYER PASS
