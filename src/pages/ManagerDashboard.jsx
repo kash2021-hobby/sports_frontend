@@ -16,12 +16,19 @@ export default function ManagerDashboard({ clubId = 1 }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
     const [pendingTrialsCount, setPendingTrialsCount] = useState(0);
-    // 🌟 NEW: State to hold the club's specific name and logo
     const [clubInfo, setClubInfo] = useState(null);
 
+    // 🌟 NEW: States for tracking total and new counts
+    const [totalTournaments, setTotalTournaments] = useState(0);
+    const [newTournamentsCount, setNewTournamentsCount] = useState(0);
+    
+    const [totalMatches, setTotalMatches] = useState(0);
+    const [newMatchesCount, setNewMatchesCount] = useState(0);
+
+    // 🌟 1. Fetching all the data
     useEffect(() => {
-        // Fetch Notification Counts
-        const fetchNotificationCounts = async () => {
+        const fetchAllData = async () => {
+            // A. Fetch Trial Applications
             try {
                 const response = await clubAPI.getApplications(clubId);
                 const players = response.data.applications || response.data || [];
@@ -30,29 +37,67 @@ export default function ManagerDashboard({ clubId = 1 }) {
             } catch (error) {
                 console.error("Failed to fetch notification counts:", error);
             }
+
+            // B. Fetch Tournaments
+            try {
+                const tRes = await fetch("https://backend.dhsa.co.in/tournaments");
+                if (tRes.ok) {
+                    const tData = await tRes.json();
+                    const count = tData.length;
+                    setTotalTournaments(count);
+                    
+                    // Compare against what the user has already seen
+                    const seenTournaments = parseInt(localStorage.getItem("seenTournaments") || "0");
+                    setNewTournamentsCount(Math.max(0, count - seenTournaments));
+                }
+            } catch (error) { console.error("Failed to fetch tournaments:", error); }
+
+            // C. Fetch Assigned Matches
+            try {
+                const mRes = await fetch(`https://backend.dhsa.co.in/clubs/${clubId}/matches`);
+                if (mRes.ok) {
+                    const mData = await mRes.json();
+                    const count = mData.length;
+                    setTotalMatches(count);
+                    
+                    // Compare against what the user has already seen
+                    const seenMatches = parseInt(localStorage.getItem(`seenMatches_${clubId}`) || "0");
+                    setNewMatchesCount(Math.max(0, count - seenMatches));
+                }
+            } catch (error) { console.error("Failed to fetch matches:", error); }
         };
 
-        // 🌟 NEW: Fetch Club Details
         const fetchClubInfo = async () => {
             try {
                 const res = await fetch(`https://backend.dhsa.co.in/clubs`);
                 const data = await res.json();
-                // Find the specific club this manager belongs to
                 const myClub = data.find(c => parseInt(c.id) === parseInt(clubId));
-                if (myClub) {
-                    setClubInfo(myClub);
-                }
+                if (myClub) setClubInfo(myClub);
             } catch (error) {
                 console.error("Failed to fetch club info:", error);
             }
         };
 
-        fetchNotificationCounts();
-        fetchClubInfo(); // Initial Load
+        fetchAllData();
+        fetchClubInfo(); 
 
-        const interval = setInterval(fetchNotificationCounts, 10000);
+        const interval = setInterval(fetchAllData, 10000);
         return () => clearInterval(interval);
     }, [clubId]);
+
+    // 🌟 2. The "Disappearing Badge" Logic
+    // Whenever the active tab changes, check if we need to clear a badge
+    useEffect(() => {
+        if (activeTab === "Tournament") {
+            // Save the current total to localStorage so the badge drops to 0
+            localStorage.setItem("seenTournaments", totalTournaments.toString());
+            setNewTournamentsCount(0);
+        } else if (activeTab === "My Tournaments") {
+            // Save the current total to localStorage so the badge drops to 0
+            localStorage.setItem(`seenMatches_${clubId}`, totalMatches.toString());
+            setNewMatchesCount(0);
+        }
+    }, [activeTab, totalTournaments, totalMatches, clubId]);
 
     const handleLogout = () => {
         localStorage.removeItem("currentUser");
@@ -90,7 +135,10 @@ export default function ManagerDashboard({ clubId = 1 }) {
                 setIsSidebarOpen={setIsSidebarOpen}
                 handleLogout={handleLogout}
                 pendingTrialsCount={pendingTrialsCount} 
-                clubInfo={clubInfo} // 🌟 PASSED DOWN TO SIDEBAR
+                clubInfo={clubInfo}
+                /* 🌟 3. Pass the new counts down to the sidebar! */
+                newTournamentsCount={newTournamentsCount} 
+                newMatchesCount={newMatchesCount}
             />
 
             {/* Main Content */}
