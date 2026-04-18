@@ -71,7 +71,7 @@ export default function PlayersPage() {
         }
     };
 
-    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
+  const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
 
     // 🌟 REWRITTEN: HORIZONTAL SINGLE-SIDED ID CARD (WITH FIXED COMPLETE LOGO)
     const generateIdCard = () => {
@@ -308,7 +308,7 @@ export default function PlayersPage() {
                         </div>
 
                         <div class="pass-banner">
-                            PLAYER PASS
+                            PLAYER ID
                         </div>
                         
                         <div class="main-content">
@@ -460,7 +460,7 @@ export default function PlayersPage() {
                                     onClick={generateIdCard}
                                     className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex justify-center items-center gap-2 transition-colors shadow-md"
                                 >
-                                    <Printer size={16} /> Generate Pass
+                                    <Printer size={16} /> Generate ID
                                 </button>
                                 <button 
                                     onClick={() => setIsTransferModalOpen(true)}
