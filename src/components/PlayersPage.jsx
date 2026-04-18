@@ -71,9 +71,9 @@ export default function PlayersPage() {
         }
     };
 
-    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
 
-    // 🌟 REWRITTEN: HORIZONTAL SINGLE-SIDED ID CARD
+    // 🌟 REWRITTEN: HORIZONTAL SINGLE-SIDED ID CARD (WITH FIXED LOGO)
     const generateIdCard = () => {
         if (!viewPlayer) return;
 
@@ -133,26 +133,27 @@ export default function PlayersPage() {
                             border-bottom: 3px solid #000;
                         }
 
+                        /* 🌟 FIXED LOGO STYLES */
                         .logo-circle {
-                            width: 80px;
-                            height: 80px;
+                            width: 100px;
+                            height: 100px;
                             background: #fff;
                             border-radius: 50%;
-                            border: 3px solid #000;
+                            border: 2px solid #000;
                             display: flex;
                             align-items: center;
                             justify-content: center;
                             flex-shrink: 0;
-                            margin-right: 20px;
-                            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+                            margin-right: 25px;
+                            overflow: hidden;
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
                         }
                         
-                        .logo-circle span {
-                            color: #166534;
-                            font-weight: 900;
-                            font-size: 20px;
-                            text-align: center;
-                            line-height: 1;
+                        .logo-circle img {
+                            width: 92%; /* 🌟 Gives a little breathing room so edges don't cut off */
+                            height: 92%;
+                            object-fit: contain; 
+                            border-radius: 50%;
                         }
 
                         .header-text {
@@ -296,15 +297,15 @@ export default function PlayersPage() {
                     
                     <div class="id-card">
                         
-                        <<div class="header">
-    <div class="logo-circle">
-        <img src="https://hub.dhsa.co.in/assets/dhsa_logo-C7UT0L8w.jpeg" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;" alt="DHSA Logo" />
-    </div>
-    <div class="header-text">
-        <h1>DIMA HASAO SPORTS ASSOCIATION</h1>
-        <h2>OFFICIAL REGISTRATION PORTAL</h2>
-    </div>
-</div>
+                        <div class="header">
+                            <div class="logo-circle">
+                                <img src="https://hub.dhsa.co.in/assets/dhsa_logo-C7UT0L8w.jpeg" alt="DHSA Logo" />
+                            </div>
+                            <div class="header-text">
+                                <h1>DIMA HASAO SPORTS ASSOCIATION</h1>
+                                <h2>OFFICIAL REGISTRATION PORTAL</h2>
+                            </div>
+                        </div>
 
                         <div class="pass-banner">
                             PLAYER PASS
