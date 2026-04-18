@@ -51,7 +51,7 @@ export default function PlayerDashboard() {
                 if (matchesRes.ok) {
                     const matchesData = await matchesRes.json();
                     
-                    // 🌟 THE FIX: Smart Sorting by Date and Time
+                    // Smart Sorting by Date and Time
                     const sortedMatches = matchesData.sort((a, b) => {
                         // Push TBD dates to the bottom
                         if (!a.match_date || a.match_date === "TBD") return 1;
@@ -84,7 +84,7 @@ export default function PlayerDashboard() {
     /* ===============================
        HELPERS & LOGOUT
     ================================ */
-    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
 
     const handleLogout = () => {
         if (window.confirm("Are you sure you want to log out?")) {
@@ -106,6 +106,16 @@ export default function PlayerDashboard() {
                 <p className="mt-4 text-slate-500 font-medium">Loading your dashboard...</p>
             </div>
         );
+    }
+
+    // 🌟 THE FIX: Extract the jersey number from the Teams array if it exists
+    let displayJerseyNumber = "TBD";
+    if (playerData?.Teams && playerData.Teams.length > 0) {
+        // Find the first team and check its junction table (TeamPlayer)
+        const teamData = playerData.Teams[0];
+        if (teamData.TeamPlayer && teamData.TeamPlayer.jersey_number) {
+            displayJerseyNumber = teamData.TeamPlayer.jersey_number;
+        }
     }
 
     /* ===============================
@@ -213,7 +223,10 @@ export default function PlayerDashboard() {
                                     <div className="w-px h-10 bg-white/10"></div>
                                     <div className="text-right">
                                         <p className="text-[10px] uppercase text-slate-400 font-black tracking-widest mb-1">Jersey</p>
-                                        <p className="font-black text-2xl text-emerald-400 leading-none">TBD</p>
+                                        <p className="font-black text-2xl text-emerald-400 leading-none">
+                                            {/* 🌟 THE FIX: Display the actual jersey number! */}
+                                            {displayJerseyNumber}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
