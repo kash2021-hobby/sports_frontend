@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, UserCircle, FileText, Activity, Trophy, X, Phone, Calendar, Ruler, Building2, ArrowRightLeft, Upload } from 'lucide-react';
+import { Search, UserCircle, FileText, Activity, Trophy, X, Phone, Calendar, Ruler, Building2, ArrowRightLeft, Upload, Printer } from 'lucide-react';
 import API from '../services/api';
 
 export default function PlayersPage() {
@@ -9,7 +9,7 @@ export default function PlayersPage() {
     const [modalTab, setModalTab] = useState('Core Info');
     const [searchQuery, setSearchQuery] = useState('');
 
-    // 🌟 1. NEW STATE FOR TRANSFER LOGIC
+    // TRANSFER LOGIC
     const [clubs, setClubs] = useState([]);
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [transferData, setTransferData] = useState({ newClubId: '', nocFile: null });
@@ -17,7 +17,7 @@ export default function PlayersPage() {
 
     useEffect(() => { 
         fetchPlayers(); 
-        fetchClubs(); // 🌟 Fetch clubs when page loads
+        fetchClubs(); 
     }, []);
 
     const fetchPlayers = async () => {
@@ -31,11 +31,8 @@ export default function PlayersPage() {
         }
     };
 
-    // 🌟 2. FETCH CLUBS FOR DROPDOWN
-    // 🌟 2. FETCH CLUBS FOR DROPDOWN
     const fetchClubs = async () => {
         try {
-            // ✅ FIXED: Matches your backend exactly!
             const res = await API.get('/clubs'); 
             setClubs(res.data);
         } catch (err) {
@@ -43,7 +40,6 @@ export default function PlayersPage() {
         }
     };
 
-    // 🌟 3. HANDLE TRANSFER SUBMIT
     const handleTransferSubmit = async (e) => {
         e.preventDefault();
         if (!transferData.newClubId || !transferData.nocFile) {
@@ -53,22 +49,20 @@ export default function PlayersPage() {
 
         setTransferring(true);
         try {
-            // Using FormData because we are uploading a file (NOC photo)
             const formData = new FormData();
             formData.append('player_id', viewPlayer.id);
             formData.append('new_club_id', transferData.newClubId);
             formData.append('noc_document', transferData.nocFile);
 
-            // Send to backend (Adjust endpoint to match your server logic)
             await API.post('/admin/transfer-player', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
             alert("Player transferred successfully!");
             setIsTransferModalOpen(false);
-            setViewPlayer(null); // Close profile modal to refresh view
-            fetchPlayers(); // Refresh player list
-            setTransferData({ newClubId: '', nocFile: null }); // Reset form
+            setViewPlayer(null); 
+            fetchPlayers(); 
+            setTransferData({ newClubId: '', nocFile: null }); 
         } catch (err) {
             console.error("Transfer failed", err);
             alert("Error transferring player. Please try again.");
@@ -77,13 +71,233 @@ export default function PlayersPage() {
         }
     };
 
-    /* ===============================
-        DRIVE IMAGE HELPER (Fixed the missing $ sign!)
-    ================================ */
-    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
-    /* ===============================
-        OMNI-SEARCH FILTER LOGIC 
-    ================================ */
+    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
+
+    // 🌟 NEW: ID CARD GENERATOR
+    const generateIdCard = () => {
+        if (!viewPlayer) return;
+
+        const photoUrl = getDriveImageUrl(viewPlayer.player_photo_url);
+        const clubName = viewPlayer.Club?.name || 'Independent';
+
+        // Open a new blank window
+        const printWindow = window.open('', '', 'width=900,height=600');
+        
+        // Write the HTML structure into the new window
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Player ID Card - ${viewPlayer.full_name}</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;0,900&display=swap');
+                        
+                        body { 
+                            font-family: 'Montserrat', sans-serif; 
+                            margin: 0; 
+                            padding: 20px; 
+                            display: flex; 
+                            justify-content: center; 
+                            background-color: #f1f5f9;
+                            -webkit-print-color-adjust: exact !important;
+                            color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                        }
+                        
+                        /* Main Card Container */
+                        .card-container {
+                            width: 800px;
+                            height: 500px;
+                            background: white;
+                            border-radius: 20px;
+                            overflow: hidden;
+                            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+                            display: flex;
+                            flex-direction: column;
+                            position: relative;
+                            border: 2px solid #e2e8f0;
+                        }
+
+                        /* Header Section (Red) */
+                        .header {
+                            background: linear-gradient(135deg, #e11d48, #be123c);
+                            color: white;
+                            padding: 20px;
+                            text-align: center;
+                            position: relative;
+                        }
+
+                        .header h1 {
+                            margin: 0;
+                            font-size: 48px;
+                            font-weight: 900;
+                            letter-spacing: 2px;
+                            text-transform: uppercase;
+                            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                        }
+
+                        .header h2 {
+                            margin: 5px 0 0 0;
+                            font-size: 24px;
+                            font-weight: 700;
+                            color: #fecdd3;
+                            letter-spacing: 1px;
+                        }
+
+                        /* Player Pass Banner */
+                        .pass-banner {
+                            background-color: #9f1239;
+                            color: white;
+                            text-align: center;
+                            padding: 10px;
+                            font-size: 36px;
+                            font-weight: 900;
+                            letter-spacing: 8px;
+                            border-top: 4px solid #fff;
+                            border-bottom: 4px solid #fff;
+                        }
+
+                        /* Body Section */
+                        .body-section {
+                            display: flex;
+                            padding: 30px;
+                            flex-grow: 1;
+                            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+                            background-size: 20px 20px;
+                        }
+
+                        /* Photo Container */
+                        .photo-container {
+                            width: 200px;
+                            height: 250px;
+                            border: 4px solid #0f172a;
+                            border-radius: 12px;
+                            overflow: hidden;
+                            background: white;
+                            flex-shrink: 0;
+                        }
+
+                        .photo-container img {
+                            width: 100%;
+                            height: 100%;
+                            object-fit: cover;
+                        }
+
+                        /* Details Container */
+                        .details-container {
+                            padding-left: 40px;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            width: 100%;
+                        }
+
+                        .detail-row {
+                            display: flex;
+                            align-items: baseline;
+                            margin-bottom: 15px;
+                        }
+
+                        .detail-label {
+                            font-size: 28px;
+                            font-weight: 700;
+                            color: #0f172a;
+                            width: 140px;
+                        }
+
+                        .detail-value {
+                            font-size: 32px;
+                            font-weight: 900;
+                            color: #0f172a;
+                            text-transform: uppercase;
+                        }
+
+                        /* Footer Section */
+                        .footer {
+                            background-color: #e11d48;
+                            color: white;
+                            padding: 15px 30px;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        }
+
+                        .validity {
+                            font-size: 24px;
+                            font-weight: 900;
+                        }
+
+                        .signature {
+                            text-align: right;
+                        }
+
+                        .signature-line {
+                            width: 200px;
+                            border-bottom: 2px solid white;
+                            margin-bottom: 5px;
+                            height: 40px;
+                        }
+
+                        .signature-title {
+                            font-size: 14px;
+                            font-weight: 700;
+                        }
+
+                        /* Print Styles to force background colors */
+                        @media print {
+                            body { background-color: white; padding: 0; }
+                            .card-container { border: none; box-shadow: none; border: 1px solid #ccc; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="card-container">
+                        <div class="header">
+                            <h1>CEM'S CUP 2025</h1>
+                            <h2>INVITATION PRIZE MONEY FOOTBALL TOURNAMENT</h2>
+                        </div>
+                        <div class="pass-banner">
+                            PLAYER PASS
+                        </div>
+                        
+                        <div class="body-section">
+                            <div class="photo-container">
+                                <img src="${photoUrl}" alt="Player Photo" onerror="this.src='https://placehold.co/200x250?text=No+Photo'" />
+                            </div>
+                            <div class="details-container">
+                                <div class="detail-row">
+                                    <div class="detail-label">Name:</div>
+                                    <div class="detail-value">${viewPlayer.full_name}</div>
+                                </div>
+                                <div class="detail-row">
+                                    <div class="detail-label">Club:</div>
+                                    <div class="detail-value">${clubName}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="footer">
+                            <div class="validity">Valid: Only for 2025 Season</div>
+                            <div class="signature">
+                                <div class="signature-line"></div>
+                                <div class="signature-title">Organizing Secretary</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </body>
+            </html>
+        `);
+
+        // Close the document so it renders
+        printWindow.document.close();
+        
+        // Wait briefly for images to load, then trigger the print dialog
+        setTimeout(() => {
+            printWindow.focus();
+            printWindow.print();
+        }, 500);
+    };
+
     const filteredPlayers = players.filter(p => {
         if (p.status !== "Registered") return false;
         if (!searchQuery) return true;
@@ -160,12 +374,12 @@ export default function PlayersPage() {
                 ))}
             </div>
 
-            {/* FULL SCREEN MOBILE MODAL (PLAYER PROFILE) */}
+            {/* FULL SCREEN MODAL (PLAYER PROFILE) */}
             {viewPlayer && (
                 <div className="fixed inset-0 z-[100] bg-white md:bg-slate-900/60 md:backdrop-blur-sm flex items-center justify-center">
                     <div className="w-full h-full md:h-auto md:max-w-4xl md:max-h-[90vh] md:rounded-3xl bg-white flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
                         
-                        <div className="p-6 bg-slate-900 text-white flex justify-between items-center shrink-0">
+                        <div className="p-6 bg-slate-900 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 gap-4">
                             <div className="flex items-center gap-4">
                                 <img src={getDriveImageUrl(viewPlayer.player_photo_url)} className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-emerald-500 object-cover" alt="" />
                                 <div>
@@ -173,26 +387,23 @@ export default function PlayersPage() {
                                     <p className="text-emerald-400 text-xs font-bold uppercase">{viewPlayer.position} • {viewPlayer.Club?.name || 'Independent'}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                {/* 🌟 4. TRANSFER BUTTON */}
+                            
+                            {/* 🌟 ACTION BUTTONS: Transfer & Print ID */}
+                            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                                <button 
+                                    onClick={generateIdCard}
+                                    className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex justify-center items-center gap-2 transition-colors shadow-md"
+                                >
+                                    <Printer size={16} /> Generate Pass
+                                </button>
                                 <button 
                                     onClick={() => setIsTransferModalOpen(true)}
-                                    className="hidden md:flex bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold items-center gap-2 transition-colors"
+                                    className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex justify-center items-center gap-2 transition-colors shadow-md"
                                 >
-                                    <ArrowRightLeft size={16} /> Transfer Player
+                                    <ArrowRightLeft size={16} /> Transfer
                                 </button>
-                                <button onClick={() => setViewPlayer(null)} className="p-2 bg-slate-800 hover:bg-rose-500 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+                                <button onClick={() => setViewPlayer(null)} className="hidden sm:block p-2 bg-slate-800 hover:bg-rose-500 rounded-full transition-colors ml-2"><X className="w-5 h-5" /></button>
                             </div>
-                        </div>
-
-                        {/* Mobile Transfer Button (Shows below header on small screens) */}
-                        <div className="md:hidden bg-slate-800 p-3 flex justify-center border-t border-slate-700">
-                            <button 
-                                onClick={() => setIsTransferModalOpen(true)}
-                                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-xl text-sm font-bold flex justify-center items-center gap-2 transition-colors"
-                            >
-                                <ArrowRightLeft size={18} /> Transfer Player to New Club
-                            </button>
                         </div>
 
                         <div className="flex border-b border-slate-100 bg-slate-50 overflow-x-auto shrink-0 px-4">
@@ -222,11 +433,16 @@ export default function PlayersPage() {
                                 </div>
                             )}
                         </div>
+                        
+                        {/* Mobile Close Button */}
+                        <div className="sm:hidden p-4 border-t border-slate-100 bg-white">
+                             <button onClick={() => setViewPlayer(null)} className="w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl">Close Profile</button>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* 🌟 5. TRANSFER POPUP MODAL */}
+            {/* TRANSFER POPUP MODAL */}
             {isTransferModalOpen && (
                 <div className="fixed inset-0 z-[200] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
                     <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
@@ -250,25 +466,22 @@ export default function PlayersPage() {
                             </div>
 
                             {/* New Club Dropdown */}
-<div>
-    <label className="block text-xs font-bold text-emerald-600 uppercase mb-1.5">Select New Club *</label>
-    <select 
-        required
-        value={transferData.newClubId}
-        onChange={(e) => setTransferData({...transferData, newClubId: e.target.value})}
-        className="w-full bg-white border border-emerald-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-bold text-slate-800 shadow-sm"
-    >
-        <option value="" disabled>-- Choose Destination Club --</option>
-        
-        {/* 🌟 THE FIX: Filter out the player's current club before mapping! */}
-        {clubs
-            .filter(club => club.id !== viewPlayer.club_applied) 
-            .map(club => (
-                <option key={club.id} value={club.id}>{club.name}</option>
-        ))}
-
-    </select>
-</div>
+                            <div>
+                                <label className="block text-xs font-bold text-emerald-600 uppercase mb-1.5">Select New Club *</label>
+                                <select 
+                                    required
+                                    value={transferData.newClubId}
+                                    onChange={(e) => setTransferData({...transferData, newClubId: e.target.value})}
+                                    className="w-full bg-white border border-emerald-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-bold text-slate-800 shadow-sm"
+                                >
+                                    <option value="" disabled>-- Choose Destination Club --</option>
+                                    {clubs
+                                        .filter(club => club.id !== viewPlayer.club_applied) 
+                                        .map(club => (
+                                            <option key={club.id} value={club.id}>{club.name}</option>
+                                    ))}
+                                </select>
+                            </div>
 
                             {/* NOC Document Upload */}
                             <div>
