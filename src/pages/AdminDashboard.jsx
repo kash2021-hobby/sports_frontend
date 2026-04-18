@@ -18,8 +18,7 @@ import RefereePage from '../components/RefereePage';
 /* =========================================================================
    GOOGLE DRIVE HELPER
 ========================================================================= */
-const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
-
+const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
 
 
 /* =========================================================================
@@ -194,7 +193,6 @@ const ApplicationsView = () => {
                                         <div className="bg-slate-50 p-4 rounded-xl space-y-3 text-sm border border-slate-100">
                                             <p className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 uppercase font-bold text-xs">Aadhaar No.</span> <span className="font-black text-emerald-700 tracking-widest">{viewPlayer.aadhaar_number || "N/A"}</span></p>
                                             
-                                            {/* Cleanly formatted DOB only */}
                                             <p className="flex justify-between border-b border-slate-200 pb-2">
                                                 <span className="text-slate-500 uppercase font-bold text-xs">DOB</span> 
                                                 <span className="font-semibold text-slate-900">
@@ -367,7 +365,6 @@ const ApplicationsView = () => {
                                         </span>
                                     </label>
 
-                                    {/* 🌟 NEW: Label added and inputs aligned beautifully! */}
                                     <div className="flex-1 w-full flex flex-col gap-1.5">
                                         <label className="text-xs font-bold text-slate-600 uppercase tracking-wide ml-1">
                                             Upload Verified Screenshot / PDF of the Aadhaar
@@ -554,11 +551,10 @@ const TransferHistoryPage = () => {
         fetchHistory();
     }, []);
 
-    // 🌟 FIXED: Now searches by Name OR Phone Number
     const filteredHistory = history.filter(record => {
         const query = searchQuery.toLowerCase();
         const nameMatch = record.player_name?.toLowerCase().includes(query);
-        const phoneMatch = record.player_phone?.includes(query); // Assuming backend sends player_phone
+        const phoneMatch = record.player_phone?.includes(query);
         
         return nameMatch || phoneMatch;
     });
@@ -588,7 +584,6 @@ const TransferHistoryPage = () => {
 
                 <div className="relative w-full mt-2">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    {/* 🌟 UPDATED PLACEHOLDER */}
                     <input
                         type="text"
                         placeholder="Search transfers by player name or phone number..."
@@ -611,7 +606,6 @@ const TransferHistoryPage = () => {
                                 <tr>
                                     <th className="px-6 py-4">Date</th>
                                     <th className="px-6 py-4">Player</th>
-                                    {/* 🌟 ADDED PHONE COLUMN */}
                                     <th className="px-6 py-4">Phone</th>
                                     <th className="px-6 py-4">Transfer Path</th>
                                     <th className="px-6 py-4 text-center">NOC Document</th>
@@ -637,7 +631,6 @@ const TransferHistoryPage = () => {
                                                 <span className="font-bold text-slate-900">{record.player_name}</span>
                                             </div>
                                         </td>
-                                        {/* 🌟 ADDED PHONE DATA */}
                                         <td className="px-6 py-4 font-semibold text-slate-700">
                                             {record.player_phone || "N/A"}
                                         </td>
@@ -687,6 +680,7 @@ export default function AdminControlPanel() {
     const [sidebarBadges, setSidebarBadges] = useState({
         "Applications": 0,
         "Teams": 0,
+        "Transfer History": 0,
         "Notifications": 0
     });
 
@@ -694,10 +688,13 @@ export default function AdminControlPanel() {
         const fetchBadges = async () => {
             try {
                 const res = await API.get('/admin/dashboard-stats');
+                
+                // 🌟 THE FIX: Map the specific keys from backend response to the exact ID of the nav items
                 setSidebarBadges({
                     "Applications": res.data.counts.pendingApps || 0,
                     "Teams": res.data.counts.pendingTeams || 0,
-                    "Notifications": res.data.counts.unreadNotifications || 0
+                    "Transfer History": res.data.counts.pendingTransfers || 0,
+                    "Notifications": res.data.counts.pendingTourneyRegs || 0
                 });
             } catch (error) {
                 console.error("Error fetching sidebar badges", error);
@@ -774,6 +771,7 @@ export default function AdminControlPanel() {
                         const Icon = item.icon;
                         const isActive = activeTab === item.id;
                         
+                        // 🌟 MAP THE BADGE DATA DIRECTLY TO THIS NAV ITEM
                         const badgeCount = sidebarBadges[item.id] || 0;
 
                         return (
