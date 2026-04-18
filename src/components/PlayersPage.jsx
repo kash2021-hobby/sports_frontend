@@ -71,108 +71,94 @@ export default function PlayersPage() {
         }
     };
 
- const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
-    // 🌟 NEW: ID CARD GENERATOR
+    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
+
+    // 🌟 REWRITTEN: OFFICIAL DHSA ID CARD GENERATOR (FRONT & BACK)
     const generateIdCard = () => {
         if (!viewPlayer) return;
 
         const photoUrl = getDriveImageUrl(viewPlayer.player_photo_url);
         const clubName = viewPlayer.Club?.name || 'Independent';
+        const formattedDob = viewPlayer.dob ? new Date(viewPlayer.dob).toLocaleDateString('en-GB').replace(/\//g, '-') : "N/A";
+        const playerSequence = viewPlayer.id.toString().padStart(4, '0');
 
-        // Open a new blank window
         const printWindow = window.open('', '', 'width=900,height=600');
         
-        // Write the HTML structure into the new window
         printWindow.document.write(`
             <html>
                 <head>
-                    <title>Player ID Card - ${viewPlayer.full_name}</title>
+                    <title>DHSA ID Card - ${viewPlayer.full_name}</title>
                     <style>
                         @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;0,900&display=swap');
                         
                         body { 
                             font-family: 'Montserrat', sans-serif; 
                             margin: 0; 
-                            padding: 20px; 
+                            padding: 40px; 
                             display: flex; 
+                            gap: 30px;
                             justify-content: center; 
-                            background-color: #f1f5f9;
+                            background-color: #f8fafc;
                             -webkit-print-color-adjust: exact !important;
                             color-adjust: exact !important;
                             print-color-adjust: exact !important;
                         }
                         
-                        /* Main Card Container */
-                        .card-container {
-                            width: 800px;
-                            height: 500px;
+                        /* Standard Vertical ID Card Size */
+                        .id-card {
+                            width: 260px;
+                            height: 410px;
                             background: white;
-                            border-radius: 20px;
+                            border-radius: 16px;
                             overflow: hidden;
-                            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+                            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
                             display: flex;
                             flex-direction: column;
                             position: relative;
                             border: 2px solid #e2e8f0;
                         }
 
-                        /* Header Section (Red) */
+                        /* FRONT SIDE STYLES */
                         .header {
-                            background: linear-gradient(135deg, #e11d48, #be123c);
+                            background: #0f172a;
                             color: white;
-                            padding: 20px;
                             text-align: center;
-                            position: relative;
+                            padding: 20px 10px 15px 10px;
+                            border-bottom: 4px solid #10b981;
                         }
 
                         .header h1 {
                             margin: 0;
-                            font-size: 48px;
+                            font-size: 15px;
                             font-weight: 900;
-                            letter-spacing: 2px;
-                            text-transform: uppercase;
-                            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-                        }
-
-                        .header h2 {
-                            margin: 5px 0 0 0;
-                            font-size: 24px;
-                            font-weight: 700;
-                            color: #fecdd3;
                             letter-spacing: 1px;
                         }
 
-                        /* Player Pass Banner */
-                        .pass-banner {
-                            background-color: #9f1239;
-                            color: white;
-                            text-align: center;
-                            padding: 10px;
-                            font-size: 36px;
-                            font-weight: 900;
-                            letter-spacing: 8px;
-                            border-top: 4px solid #fff;
-                            border-bottom: 4px solid #fff;
+                        .header h2 {
+                            margin: 3px 0 0 0;
+                            font-size: 10px;
+                            font-weight: 700;
+                            color: #10b981;
+                            text-transform: uppercase;
+                            letter-spacing: 2px;
                         }
 
-                        /* Body Section */
-                        .body-section {
+                        .photo-wrapper {
                             display: flex;
-                            padding: 30px;
-                            flex-grow: 1;
-                            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
-                            background-size: 20px 20px;
+                            justify-content: center;
+                            margin-top: -20px;
+                            position: relative;
+                            z-index: 10;
                         }
 
-                        /* Photo Container */
                         .photo-container {
-                            width: 200px;
-                            height: 250px;
-                            border: 4px solid #0f172a;
-                            border-radius: 12px;
-                            overflow: hidden;
+                            width: 100px;
+                            height: 100px;
+                            border-radius: 50%;
                             background: white;
-                            flex-shrink: 0;
+                            border: 4px solid #10b981;
+                            overflow: hidden;
+                            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
                         }
 
                         .photo-container img {
@@ -181,104 +167,180 @@ export default function PlayersPage() {
                             object-fit: cover;
                         }
 
-                        /* Details Container */
-                        .details-container {
-                            padding-left: 40px;
-                            display: flex;
-                            flex-direction: column;
-                            justify-content: center;
-                            width: 100%;
+                        .front-details {
+                            text-align: center;
+                            padding: 10px 20px;
+                            flex-grow: 1;
                         }
 
-                        .detail-row {
-                            display: flex;
-                            align-items: baseline;
-                            margin-bottom: 15px;
-                        }
-
-                        .detail-label {
-                            font-size: 28px;
-                            font-weight: 700;
-                            color: #0f172a;
-                            width: 140px;
-                        }
-
-                        .detail-value {
-                            font-size: 32px;
+                        .player-name {
+                            font-size: 18px;
                             font-weight: 900;
                             color: #0f172a;
+                            margin: 5px 0 2px 0;
                             text-transform: uppercase;
                         }
 
-                        /* Footer Section */
+                        .club-name {
+                            font-size: 12px;
+                            font-weight: 800;
+                            color: #10b981;
+                            margin: 0 0 15px 0;
+                            text-transform: uppercase;
+                        }
+
+                        .info-grid {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 8px;
+                            background: #f8fafc;
+                            padding: 12px;
+                            border-radius: 10px;
+                            text-align: left;
+                        }
+
+                        .info-item .label {
+                            display: block;
+                            font-size: 8px;
+                            font-weight: 800;
+                            color: #64748b;
+                            text-transform: uppercase;
+                        }
+
+                        .info-item .value {
+                            font-size: 11px;
+                            font-weight: 800;
+                            color: #0f172a;
+                        }
+
                         .footer {
-                            background-color: #e11d48;
+                            background: #10b981;
                             color: white;
-                            padding: 15px 30px;
+                            text-align: center;
+                            padding: 10px;
+                            font-size: 10px;
+                            font-weight: 800;
+                            letter-spacing: 1px;
+                        }
+
+                        /* BACK SIDE STYLES */
+                        .back-content {
+                            padding: 25px 20px;
                             display: flex;
-                            justify-content: space-between;
-                            align-items: center;
+                            flex-direction: column;
+                            flex-grow: 1;
                         }
 
-                        .validity {
-                            font-size: 24px;
+                        .back-section {
+                            margin-bottom: 20px;
+                        }
+
+                        .back-title {
+                            font-size: 12px;
+                            color: #10b981;
                             font-weight: 900;
+                            text-transform: uppercase;
+                            border-bottom: 2px solid #e2e8f0;
+                            padding-bottom: 4px;
+                            margin-bottom: 8px;
                         }
 
-                        .signature {
-                            text-align: right;
+                        .back-text {
+                            font-size: 11px;
+                            color: #475569;
+                            line-height: 1.5;
+                            font-weight: 600;
                         }
 
-                        .signature-line {
-                            width: 200px;
-                            border-bottom: 2px solid white;
-                            margin-bottom: 5px;
-                            height: 40px;
+                        .back-text .highlight {
+                            color: #0f172a;
+                            font-weight: 800;
+                            display: block;
+                            font-size: 13px;
+                            margin-top: 2px;
                         }
 
-                        .signature-title {
-                            font-size: 14px;
-                            font-weight: 700;
+                        .disclaimer {
+                            margin-top: auto;
+                            font-size: 9px;
+                            text-align: center;
+                            color: #64748b;
+                            font-weight: 600;
+                            padding-top: 15px;
+                            border-top: 1px dashed #cbd5e1;
                         }
 
-                        /* Print Styles to force background colors */
                         @media print {
                             body { background-color: white; padding: 0; }
-                            .card-container { border: none; box-shadow: none; border: 1px solid #ccc; }
+                            .id-card { border: 1px solid #ccc; box-shadow: none; break-inside: avoid; }
                         }
                     </style>
                 </head>
                 <body>
-                    <div class="card-container">
+                    
+                    <div class="id-card">
                         <div class="header">
-                            <h1>CEM'S CUP 2025</h1>
-                            <h2>INVITATION PRIZE MONEY FOOTBALL TOURNAMENT</h2>
-                        </div>
-                        <div class="pass-banner">
-                            PLAYER PASS
+                            <h1>DIMA HASAO</h1>
+                            <h2>Sports Association</h2>
                         </div>
                         
-                        <div class="body-section">
+                        <div class="photo-wrapper">
                             <div class="photo-container">
-                                <img src="${photoUrl}" alt="Player Photo" onerror="this.src='https://placehold.co/200x250?text=No+Photo'" />
+                                <img src="${photoUrl}" onerror="this.src='https://placehold.co/150x150?text=No+Photo'" />
                             </div>
-                            <div class="details-container">
-                                <div class="detail-row">
-                                    <div class="detail-label">Name:</div>
-                                    <div class="detail-value">${viewPlayer.full_name}</div>
+                        </div>
+
+                        <div class="front-details">
+                            <h3 class="player-name">${viewPlayer.full_name}</h3>
+                            <p class="club-name">${clubName}</p>
+                            
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="label">Date of Birth</span>
+                                    <span class="value">${formattedDob}</span>
                                 </div>
-                                <div class="detail-row">
-                                    <div class="detail-label">Club:</div>
-                                    <div class="detail-value">${clubName}</div>
+                                <div class="info-item">
+                                    <span class="label">Blood Group</span>
+                                    <span class="value">${viewPlayer.blood_group || 'N/A'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Role</span>
+                                    <span class="value">Player</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">ID Number</span>
+                                    <span class="value">DHSA-${playerSequence}</span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="footer">
-                            <div class="validity">Valid: Only for 2025 Season</div>
-                            <div class="signature">
-                                <div class="signature-line"></div>
-                                <div class="signature-title">Organizing Secretary</div>
+                            OFFICIAL PLAYER ID CARD
+                        </div>
+                    </div>
+
+                    <div class="id-card">
+                        <div class="back-content">
+                            
+                            <div class="back-section">
+                                <div class="back-title">Registered Address</div>
+                                <div class="back-text">
+                                    ${viewPlayer.city || 'N/A'}, ${viewPlayer.district || 'N/A'}<br/>
+                                    PIN: ${viewPlayer.pincode || 'N/A'}
+                                </div>
+                            </div>
+
+                            <div class="back-section">
+                                <div class="back-title">Emergency Contact</div>
+                                <div class="back-text">
+                                    ${viewPlayer.emergency_contact_name || 'N/A'}
+                                    <span class="highlight">${viewPlayer.emergency_contact_phone || 'N/A'}</span>
+                                </div>
+                            </div>
+
+                            <div class="disclaimer">
+                                This identity card is the exclusive property of Dima Hasao Sports Association (DHSA).<br/><br/>
+                                If found, please return to the nearest DHSA club office or official representative.
                             </div>
                         </div>
                     </div>
@@ -287,10 +349,8 @@ export default function PlayersPage() {
             </html>
         `);
 
-        // Close the document so it renders
         printWindow.document.close();
         
-        // Wait briefly for images to load, then trigger the print dialog
         setTimeout(() => {
             printWindow.focus();
             printWindow.print();
@@ -387,13 +447,13 @@ export default function PlayersPage() {
                                 </div>
                             </div>
                             
-                            {/* 🌟 ACTION BUTTONS: Transfer & Print ID */}
+                            {/* 🌟 ACTION BUTTONS: Print ID & Transfer */}
                             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                                 <button 
                                     onClick={generateIdCard}
                                     className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex justify-center items-center gap-2 transition-colors shadow-md"
                                 >
-                                    <Printer size={16} /> Generate Pass
+                                    <Printer size={16} /> Print ID
                                 </button>
                                 <button 
                                     onClick={() => setIsTransferModalOpen(true)}
@@ -433,7 +493,6 @@ export default function PlayersPage() {
                             )}
                         </div>
                         
-                        {/* Mobile Close Button */}
                         <div className="sm:hidden p-4 border-t border-slate-100 bg-white">
                              <button onClick={() => setViewPlayer(null)} className="w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl">Close Profile</button>
                         </div>
@@ -455,7 +514,6 @@ export default function PlayersPage() {
                         </div>
                         
                         <form onSubmit={handleTransferSubmit} className="p-6 space-y-5">
-                            {/* Present Club (Read Only) */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Current Club</label>
                                 <div className="w-full bg-slate-100 border border-slate-200 p-3 rounded-xl text-slate-600 font-bold flex items-center gap-2 cursor-not-allowed">
@@ -464,7 +522,6 @@ export default function PlayersPage() {
                                 </div>
                             </div>
 
-                            {/* New Club Dropdown */}
                             <div>
                                 <label className="block text-xs font-bold text-emerald-600 uppercase mb-1.5">Select New Club *</label>
                                 <select 
@@ -482,7 +539,6 @@ export default function PlayersPage() {
                                 </select>
                             </div>
 
-                            {/* NOC Document Upload */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Upload NOC Document *</label>
                                 <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
