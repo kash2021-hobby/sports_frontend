@@ -482,22 +482,25 @@ export default function PlayersPage() {
 
                         <div className="p-6 overflow-y-auto flex-grow custom-scrollbar">
                             {modalTab === 'Core Info' ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <InfoItem label="Phone" value={viewPlayer.phone} icon={<Phone size={16} />} />
-                                    <InfoItem label="Email" value={viewPlayer.email} icon={<FileText size={16} />} />
-                                    <InfoItem label="Club" value={viewPlayer.Club?.name} icon={<Building2 size={16} />} />
-                                    <InfoItem label="Strong Foot" value={viewPlayer.strong_foot} icon={<Trophy size={16} />} />
-                                    <InfoItem label="Height" value={`${viewPlayer.height}cm`} icon={<Ruler size={16} />} />
-                                    <InfoItem label="Weight" value={`${viewPlayer.weight}kg`} icon={<Activity size={16} />} />
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <DocItem label="Gov Document 1" url={viewPlayer.gov_doc_1_url} />
-                                    <DocItem label="Gov Document 2" url={viewPlayer.gov_doc_2_url} />
-                                    <DocItem label="Gov Document 3" url={viewPlayer.gov_doc_3_url} />
-                                    <DocItem label="Fitness Certificate" url={viewPlayer.fitness_certificate_url} />
-                                </div>
-                            )}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <InfoItem label="Phone" value={viewPlayer.phone} icon={<Phone size={16} />} />
+        <InfoItem label="Email" value={viewPlayer.email} icon={<FileText size={16} />} />
+        <InfoItem label="Club" value={viewPlayer.Club?.name} icon={<Building2 size={16} />} />
+        <InfoItem label="Strong Foot" value={viewPlayer.strong_foot} icon={<Trophy size={16} />} />
+        <InfoItem label="Height" value={`${viewPlayer.height}cm`} icon={<Ruler size={16} />} />
+        <InfoItem label="Weight" value={`${viewPlayer.weight}kg`} icon={<Activity size={16} />} />
+    </div>
+) : (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <DocItem label="Gov Document 1" url={viewPlayer.gov_doc_1_url} />
+        <DocItem label="Gov Document 2" url={viewPlayer.gov_doc_2_url} />
+        <DocItem label="Gov Document 3" url={viewPlayer.gov_doc_3_url} />
+        <DocItem label="Fitness Certificate" url={viewPlayer.fitness_certificate_url} />
+        
+        {/* 🌟 THE FIX: Added the Verified Aadhaar document to the grid! */}
+        <DocItem label="Verified Aadhaar (Admin)" url={viewPlayer.aadhaar_verified_url} />
+    </div>
+)}
                         </div>
                         
                         <div className="sm:hidden p-4 border-t border-slate-100 bg-white">
