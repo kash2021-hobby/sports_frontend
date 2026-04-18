@@ -1,11 +1,26 @@
 import React from 'react';
 import { LayoutDashboard, ClipboardList, Shield, Users, Trophy, UserCircle, Settings, X, LogOut, Swords, } from 'lucide-react';
 
-// 🌟 THE HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
-const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+// 🌟 FIXED THE HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
+const getDriveImageUrl = (url) => { 
+    if (!url) return "https://placehold.co/150x150?text=No+Photo"; 
+    const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); 
+    const fileId = match ? match[1] : null; 
+    if (!fileId) return url; 
+    return `https://drive.google.com/uc?export=view&id=${fileId}`; 
+};
 
-
-export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, handleLogout, pendingTrialsCount = 0, clubInfo }) {
+export default function ManagerSidebar({ 
+    activeTab, 
+    setActiveTab, 
+    isSidebarOpen, 
+    setIsSidebarOpen, 
+    handleLogout, 
+    pendingTrialsCount = 0, 
+    newTournamentsCount = 0, // 🌟 ADDED PROPS
+    newMatchesCount = 0,     // 🌟 ADDED PROPS
+    clubInfo 
+}) {
     const navItems = [
         { id: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
         { id: "Assigned Trials", label: "Assigned Trials", icon: ClipboardList },
@@ -22,11 +37,10 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
             fixed lg:static inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none flex flex-col
             ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}>
-            {/* 🌟 INCREASED HEIGHT OF THE HEADER TO ACCOMMODATE LARGER LOGO */}
+            {/* HEADER */}
             <div className="h-24 flex items-center justify-between px-6 border-b border-slate-800">
                 <div className="flex items-center gap-4">
                     
-                    {/* 🌟 INCREASED LOGO SIZE: Changed w-10 h-10 to w-14 h-14 */}
                     {clubInfo?.logo ? (
                         <div className="w-14 h-14 bg-white rounded-xl p-1 flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden shrink-0">
                             <img 
@@ -59,6 +73,7 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
                 </button>
             </div>
 
+            {/* NAVIGATION MENU */}
             <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
                 <div className="px-3 mb-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Management</div>
                 {navItems.map((item) => {
@@ -77,9 +92,24 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
                             <div className="flex items-center gap-2">
                                 {item.label}
                                 
+                                {/* 🌟 Trial Notifications */}
                                 {item.id === "Assigned Trials" && pendingTrialsCount > 0 && (
                                     <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm shadow-rose-500/30 animate-pulse">
-                                        {pendingTrialsCount}
+                                        {pendingTrialsCount > 99 ? "99+" : pendingTrialsCount}
+                                    </span>
+                                )}
+
+                                {/* 🌟 Tournament Hub Notifications */}
+                                {item.id === "Tournament" && newTournamentsCount > 0 && (
+                                    <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm shadow-rose-500/30 animate-pulse">
+                                        {newTournamentsCount > 99 ? "99+" : newTournamentsCount}
+                                    </span>
+                                )}
+
+                                {/* 🌟 My Tournaments (Matches) Notifications */}
+                                {item.id === "My Tournaments" && newMatchesCount > 0 && (
+                                    <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm shadow-rose-500/30 animate-pulse">
+                                        {newMatchesCount > 99 ? "99+" : newMatchesCount}
                                     </span>
                                 )}
                             </div>
@@ -90,6 +120,7 @@ export default function ManagerSidebar({ activeTab, setActiveTab, isSidebarOpen,
                 })}
             </nav>
 
+            {/* FOOTER PROFILE */}
             <div className="p-4 border-t border-slate-800">
                 <div className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl border border-slate-700/50">
                     <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold border-2 border-slate-700">M</div>
