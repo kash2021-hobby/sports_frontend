@@ -149,8 +149,8 @@ export default function PlayersPage() {
                         }
                         
                         .logo-circle img {
-                            width: 92%; 
-                            height: 92%;
+                            width: 72%; 
+                            height: 72%;
                             object-fit: contain; 
                             border-radius: 50%;
                         }
