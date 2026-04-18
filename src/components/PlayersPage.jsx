@@ -134,8 +134,8 @@ export default function PlayersPage() {
 
                         /* FIXED LOGO STYLES */
                         .logo-circle {
-                            width: 110px;
-                            height: 120px;
+                            width: 150px;
+                            height: 150px;
                             background: #fff;
                             border-radius: 50%;
                             border: 2px solid #000;
