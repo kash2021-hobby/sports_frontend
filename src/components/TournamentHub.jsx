@@ -18,9 +18,7 @@ export default function TournamentHub({ clubId }) {
     const [receiptPreview, setReceiptPreview] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
-
-    useEffect(() => {
+  const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
         if (clubId) {
             fetchData();
         }
