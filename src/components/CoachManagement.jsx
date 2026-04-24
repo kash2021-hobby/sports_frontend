@@ -53,14 +53,14 @@ export default function CoachManagement() {
         <div className="animate-in fade-in duration-500 space-y-6">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Coach Management</h1>
-                    <p className="text-slate-500 text-sm mt-1">Create and manage academy coaches.</p>
+                    <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Team Managers</h1>
+                    <p className="text-slate-500 text-sm mt-1">Create and manage team managers.</p>
                 </div>
                 <button 
                     onClick={() => setIsCreateModalOpen(true)} 
                     className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 active:scale-95 transition-all shadow-md shadow-emerald-100"
                 >
-                    <Plus className="w-5 h-5" /> Add New Secretary
+                    <Plus className="w-5 h-5" /> Add New Manager
                 </button>
             </header>
 
@@ -132,7 +132,7 @@ export default function CoachManagement() {
                 <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
                     <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in duration-300">
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                            <h2 className="text-xl font-extrabold text-slate-900">Coach Profile</h2>
+                            <h2 className="text-xl font-extrabold text-slate-900">Manager Profile</h2>
                             <button onClick={() => setSelectedCoach(null)} className="text-slate-400 hover:text-rose-500 p-2 bg-white rounded-full shadow-sm">
                                 <X className="w-5 h-5" />
                             </button>
@@ -202,7 +202,7 @@ export default function CoachManagement() {
                 <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
                     <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl">
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                            <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2"><UserCog className="w-5 h-5 text-emerald-600" /> Create Coach</h2>
+                            <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2"><UserCog className="w-5 h-5 text-emerald-600" /> Create Team Manager</h2>
                             <button onClick={() => setIsCreateModalOpen(false)} className="text-slate-400 hover:text-rose-500 bg-slate-50 p-2 rounded-full transition-colors"><X className="w-4 h-4" /></button>
                         </div>
                         <div className="p-6 space-y-4">
@@ -240,7 +240,7 @@ export default function CoachManagement() {
                         </div>
                         <div className="p-6 bg-slate-50 border-t border-slate-100 rounded-b-3xl flex gap-3">
                             <button onClick={() => setIsCreateModalOpen(false)} className="flex-1 bg-white border border-slate-200 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-100">Cancel</button>
-                            <button onClick={handleSaveCoach} className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-emerald-700 active:scale-95 transition-all">Save Secretary</button>
+                            <button onClick={handleSaveCoach} className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-emerald-700 active:scale-95 transition-all">Save</button>
                         </div>
                     </div>
                 </div>
