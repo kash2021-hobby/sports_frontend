@@ -715,7 +715,7 @@ export default function AdminControlPanel() {
         { id: "User Management", label: "User Management", icon: Users },
         { id: "Players", label: "Players Directory", icon: UserPlus },
         { id: "Transfer History", label: "Transfer Logs", icon: History }, 
-        { id: "Applications", label: "Applications", icon: FileText },
+        { id: "Applications", label: "New Players", icon: FileText },
         { id: "Coach Management", label: "Team Manager", icon: UserCog },
         { id: "Teams", label: "Teams", icon: Shield },
         { id: "Tournaments", label: "Tournaments", icon: Trophy },
