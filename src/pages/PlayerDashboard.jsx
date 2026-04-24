@@ -164,7 +164,7 @@ export default function PlayerDashboard() {
                             </p>
                         </div>
                         <div>
-                            <h3 className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Target Club</h3>
+                            <h3 className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Team</h3>
                             <p className="font-bold text-slate-800 text-sm">
                                 {playerData.Club ? playerData.Club.name : `Club #${playerData.club_applied}`}
                             </p>
