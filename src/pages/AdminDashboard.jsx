@@ -386,13 +386,21 @@ const ApplicationsView = () => {
                                 </div>
                             </div>
                             
-                            {/* Verification Bar */}
-                            <div className="mt-8 bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
-                                <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
-                                    <Shield className="w-5 h-5" /> Mandatory Verification Step
-                                </h3>
-                                
-                                <div className="flex flex-col lg:flex-row items-start lg:items-end gap-4">
+                           {/* Verification Bar */}
+<div className="mt-8 bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+    
+    {/* 🌟 THE FIX: Grouped the heading and the new bullet points together */}
+    <div>
+        <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
+            <Shield className="w-5 h-5" /> Mandatory Verification Step
+        </h3>
+        <ul className="list-disc list-inside text-xs text-slate-600 mt-2 space-y-1 ml-1 font-medium">
+            <li>Visit UIDAI portal and enter the player Aadhaar number.</li>
+            <li>Request the OTP from the player and download the E-Aadhaar.</li>
+        </ul>
+    </div>
+    
+    <div className="flex flex-col lg:flex-row items-start lg:items-end gap-4 mt-2">
                                     <a 
                                         href="https://myaadhaar.uidai.gov.in/genricDownloadAadhaar/en" 
                                         target="_blank" 
