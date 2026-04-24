@@ -20,7 +20,7 @@ const OTPVerificationPage = () => {
             await authAPI.verifyOTP(phone, otp);
             navigate('/create-mpin', { state: { phone } });
         } catch (error) {
-            alert("Invalid OTP. Hint: Use 52050.");
+            alert("Invalid OTP");
         } finally {
             setLoading(false);
         }
