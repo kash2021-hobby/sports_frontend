@@ -102,7 +102,7 @@ export default function CoachManagement() {
 
                             <div className="flex-1">
                                 <h3 className="text-xl font-extrabold text-slate-900 mb-1 truncate">
-                                    {coach.Club ? coach.Club.name : "Independent Coach"}
+                                    {coach.Club ? coach.Club.name : "No Club Assigned"}
                                 </h3>
                                 
                                 <p className="text-sm font-bold text-emerald-600 mb-3 uppercase tracking-wider">
