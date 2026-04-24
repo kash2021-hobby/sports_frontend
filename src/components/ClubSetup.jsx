@@ -55,10 +55,10 @@ const ClubSetup = () => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
             <form onSubmit={handleSubmit} className="bg-white p-10 rounded-3xl shadow-xl w-full max-w-md border border-slate-100">
-                <h1 className="text-2xl font-black text-slate-900 mb-6">Setup Your Club</h1>
+                <h1 className="text-2xl font-black text-slate-900 mb-6">Setup Your Team</h1>
                 
                 <div className="space-y-4">
-                    <label className="block text-sm font-bold text-slate-700">Club Name</label>
+                    <label className="block text-sm font-bold text-slate-700">Team Name</label>
                     <input 
                         placeholder="e.g. Elite FC" 
                         className="w-full p-4 bg-slate-50 border rounded-2xl"
@@ -74,7 +74,7 @@ const ClubSetup = () => {
                         required 
                     />
 
-                    <label className="block text-sm font-bold text-slate-700">Club Logo Image</label>
+                    <label className="block text-sm font-bold text-slate-700">Team Logo Image</label>
                     <input 
                         type="file"
                         accept="image/*"
@@ -89,7 +89,7 @@ const ClubSetup = () => {
                     disabled={loading}
                     className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl transition-all disabled:bg-slate-300"
                 >
-                    {loading ? "Uploading to Drive..." : "Register Club"}
+                    {loading ? "Uploading to Drive..." : "Register"}
                 </button>
             </form>
         </div>
