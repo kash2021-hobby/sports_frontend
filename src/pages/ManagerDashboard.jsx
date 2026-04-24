@@ -11,26 +11,54 @@ import MyTournaments from "../components/MyTournaments";
 import { Menu, LogOut } from "lucide-react";
 import { clubAPI } from "../services/api"; 
 
-export default function ManagerDashboard({ clubId = 1 }) {
+export default function ManagerDashboard({ clubId: propClubId }) {
     const [activeTab, setActiveTab] = useState("Dashboard");
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
     const [pendingTrialsCount, setPendingTrialsCount] = useState(0);
     const [clubInfo, setClubInfo] = useState(null);
 
-    // 🌟 NEW: States for tracking total and new counts
     const [totalTournaments, setTotalTournaments] = useState(0);
     const [newTournamentsCount, setNewTournamentsCount] = useState(0);
     
     const [totalMatches, setTotalMatches] = useState(0);
     const [newMatchesCount, setNewMatchesCount] = useState(0);
 
-    // 🌟 1. Fetching all the data
+    // 🌟 THE FIX: Create a robust internal state for the Club ID
+    const [activeClubId, setActiveClubId] = useState(propClubId);
+
+    // 🌟 THE FIX: Automatically grab the freshest Club ID from localStorage bypassing stale parent state
     useEffect(() => {
+        const checkStorageForClubId = () => {
+            const userRaw = localStorage.getItem("currentUser");
+            if (userRaw) {
+                try {
+                    const parsedUser = JSON.parse(userRaw);
+                    if (parsedUser?.user?.club_id) {
+                        setActiveClubId(parsedUser.user.club_id);
+                    }
+                } catch (e) {
+                    console.error("Error parsing user data");
+                }
+            }
+        };
+
+        checkStorageForClubId(); // Check immediately on mount
+        
+        // Listen for storage changes just in case it updates milliseconds later
+        window.addEventListener('storage', checkStorageForClubId);
+        return () => window.removeEventListener('storage', checkStorageForClubId);
+    }, [propClubId]);
+
+    // Fetching all the data
+    useEffect(() => {
+        // Prevent fetching if we don't have a valid club ID yet
+        if (!activeClubId) return; 
+
         const fetchAllData = async () => {
             // A. Fetch Trial Applications
             try {
-                const response = await clubAPI.getApplications(clubId);
+                const response = await clubAPI.getApplications(activeClubId);
                 const players = response.data.applications || response.data || [];
                 const newApplications = players.filter(p => p.status === "Applied");
                 setPendingTrialsCount(newApplications.length);
@@ -46,7 +74,6 @@ export default function ManagerDashboard({ clubId = 1 }) {
                     const count = tData.length;
                     setTotalTournaments(count);
                     
-                    // Compare against what the user has already seen
                     const seenTournaments = parseInt(localStorage.getItem("seenTournaments") || "0");
                     setNewTournamentsCount(Math.max(0, count - seenTournaments));
                 }
@@ -54,14 +81,13 @@ export default function ManagerDashboard({ clubId = 1 }) {
 
             // C. Fetch Assigned Matches
             try {
-                const mRes = await fetch(`https://backend.dhsa.co.in/clubs/${clubId}/matches`);
+                const mRes = await fetch(`https://backend.dhsa.co.in/clubs/${activeClubId}/matches`);
                 if (mRes.ok) {
                     const mData = await mRes.json();
                     const count = mData.length;
                     setTotalMatches(count);
                     
-                    // Compare against what the user has already seen
-                    const seenMatches = parseInt(localStorage.getItem(`seenMatches_${clubId}`) || "0");
+                    const seenMatches = parseInt(localStorage.getItem(`seenMatches_${activeClubId}`) || "0");
                     setNewMatchesCount(Math.max(0, count - seenMatches));
                 }
             } catch (error) { console.error("Failed to fetch matches:", error); }
@@ -71,7 +97,7 @@ export default function ManagerDashboard({ clubId = 1 }) {
             try {
                 const res = await fetch(`https://backend.dhsa.co.in/clubs`);
                 const data = await res.json();
-                const myClub = data.find(c => parseInt(c.id) === parseInt(clubId));
+                const myClub = data.find(c => parseInt(c.id) === parseInt(activeClubId));
                 if (myClub) setClubInfo(myClub);
             } catch (error) {
                 console.error("Failed to fetch club info:", error);
@@ -83,21 +109,20 @@ export default function ManagerDashboard({ clubId = 1 }) {
 
         const interval = setInterval(fetchAllData, 10000);
         return () => clearInterval(interval);
-    }, [clubId]);
+    }, [activeClubId]);
 
-    // 🌟 2. The "Disappearing Badge" Logic
-    // Whenever the active tab changes, check if we need to clear a badge
+    // The "Disappearing Badge" Logic
     useEffect(() => {
+        if (!activeClubId) return;
+
         if (activeTab === "Tournament") {
-            // Save the current total to localStorage so the badge drops to 0
             localStorage.setItem("seenTournaments", totalTournaments.toString());
             setNewTournamentsCount(0);
         } else if (activeTab === "My Tournaments") {
-            // Save the current total to localStorage so the badge drops to 0
-            localStorage.setItem(`seenMatches_${clubId}`, totalMatches.toString());
+            localStorage.setItem(`seenMatches_${activeClubId}`, totalMatches.toString());
             setNewMatchesCount(0);
         }
-    }, [activeTab, totalTournaments, totalMatches, clubId]);
+    }, [activeTab, totalTournaments, totalMatches, activeClubId]);
 
     const handleLogout = () => {
         localStorage.removeItem("currentUser");
@@ -106,17 +131,27 @@ export default function ManagerDashboard({ clubId = 1 }) {
 
     const renderContent = () => {
         switch (activeTab) {
-            case "Dashboard": return <ManagerDashboardHome setActiveTab={setActiveTab} clubId={clubId} />;
-            case "Assigned Trials": return <AssignedTrials clubId={clubId} />;
-            case "My Teams": return <MyTeams clubId={clubId} />;
-            case "My Players": return <MyPlayers clubId={clubId} />;
-            case "Tournament": return <TournamentHub clubId={clubId} />;
-            case "My Tournaments": return <MyTournaments clubId={clubId} />;
+            case "Dashboard": return <ManagerDashboardHome setActiveTab={setActiveTab} clubId={activeClubId} />;
+            case "Assigned Trials": return <AssignedTrials clubId={activeClubId} />;
+            case "My Teams": return <MyTeams clubId={activeClubId} />;
+            case "My Players": return <MyPlayers clubId={activeClubId} />;
+            case "Tournament": return <TournamentHub clubId={activeClubId} />;
+            case "My Tournaments": return <MyTournaments clubId={activeClubId} />;
             case "Profile": return <CoachProfile />;
-            case "Settings": return <ManagerSettings clubId={clubId} />;
-            default: return <ManagerDashboardHome setActiveTab={setActiveTab} />;
+            case "Settings": return <ManagerSettings clubId={activeClubId} />;
+            default: return <ManagerDashboardHome setActiveTab={setActiveTab} clubId={activeClubId} />;
         }
     };
+
+    // 🌟 THE FIX: Show a smooth loader while we securely retrieve the new Club ID
+    if (!activeClubId) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-slate-50 flex-col gap-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-500"></div>
+                <p className="text-emerald-700 font-bold animate-pulse">Initializing your new Club Dashboard...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
@@ -136,7 +171,6 @@ export default function ManagerDashboard({ clubId = 1 }) {
                 handleLogout={handleLogout}
                 pendingTrialsCount={pendingTrialsCount} 
                 clubInfo={clubInfo}
-                /* 🌟 3. Pass the new counts down to the sidebar! */
                 newTournamentsCount={newTournamentsCount} 
                 newMatchesCount={newMatchesCount}
             />
