@@ -5,7 +5,7 @@ import {
     UserCog, Shield, Trophy, Flag, Bell, 
     Menu, X, Search, ChevronRight, LogOut,
     History, ArrowRight, Calendar, 
-    ExternalLink, CheckCircle 
+    ExternalLink, CheckCircle, Maximize2 
 } from "lucide-react";
 import UsersPage from '../components/UsersPage';
 import CoachManagement from '../components/CoachManagement';
@@ -34,6 +34,9 @@ const ApplicationsView = () => {
     
     // Search Query State
     const [searchQuery, setSearchQuery] = useState("");
+
+    // 🌟 NEW: Full-screen document state
+    const [fullscreenDoc, setFullscreenDoc] = useState(null);
 
     useEffect(() => {
         fetchPlayers();
@@ -95,7 +98,6 @@ const ApplicationsView = () => {
         }
     };
 
-    // Filter logic for the search bar
     const filteredPlayers = players.filter(player => 
         player.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         player.aadhaar_number?.includes(searchQuery)
@@ -165,22 +167,60 @@ const ApplicationsView = () => {
                 </div>
             )}
 
+            {/* 🌟 FULLSCREEN DOCUMENT MODAL */}
+            {fullscreenDoc && (
+                <div className="fixed inset-0 z-[200] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-8 animate-in zoom-in-95 duration-200">
+                    <div className="w-full max-w-6xl flex justify-between items-center mb-4">
+                        <h3 className="text-white font-bold text-lg md:text-xl truncate pr-4">{fullscreenDoc.label}</h3>
+                        <button 
+                            onClick={() => setFullscreenDoc(null)} 
+                            className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors flex shrink-0"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
+                    <div className="w-full max-w-6xl flex-1 bg-white rounded-2xl overflow-hidden shadow-2xl">
+                        <iframe src={fullscreenDoc.url} className="w-full h-full border-0" title={fullscreenDoc.label}></iframe>
+                    </div>
+                </div>
+            )}
+
             {viewPlayer && (
                 <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
                     <div className="bg-white w-full max-w-5xl rounded-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
                             <h2 className="text-2xl font-bold text-slate-900">Player Application Profile</h2>
                             <button onClick={handleCloseModal} className="text-slate-400 hover:text-rose-500 transition-colors bg-white p-2 rounded-full shadow-sm"><X className="w-5 h-5" /></button>
                         </div>
                         
                         <div className="p-6 overflow-y-auto custom-scrollbar flex-grow">
-                            <div className="flex flex-col md:flex-row gap-8 mb-8">
-                                <img src={getDriveImageUrl(viewPlayer.player_photo_url)} alt={viewPlayer.full_name} className="w-32 h-32 md:w-48 md:h-48 rounded-2xl object-cover shadow-md border-4 border-slate-50" onError={(e) => { e.target.src = "https://placehold.co/150x150?text=No+Photo"; }} />
-                                <div className="flex flex-col justify-center">
-                                    <h2 className="text-4xl font-extrabold text-slate-900">{viewPlayer.full_name}</h2>
-                                    <div className="mt-2 flex flex-wrap gap-2">
-                                        <span className="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">{viewPlayer.position}</span>
-                                        <span className="bg-slate-100 text-slate-700 text-sm font-semibold px-3 py-1 rounded-full">{viewPlayer.age} Years Old</span>
+                            
+                            {/* 🌟 CLUB & PLAYER HEADER */}
+                            <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 mb-8 items-start">
+                                {/* Player Info */}
+                                <div className="flex items-center gap-6">
+                                    <img src={getDriveImageUrl(viewPlayer.player_photo_url)} alt={viewPlayer.full_name} className="w-28 h-28 md:w-40 md:h-40 rounded-2xl object-cover shadow-md border-4 border-slate-50 shrink-0" onError={(e) => { e.target.src = "https://placehold.co/150x150?text=No+Photo"; }} />
+                                    <div className="flex flex-col justify-center">
+                                        <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight">{viewPlayer.full_name}</h2>
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                            <span className="bg-emerald-100 text-emerald-800 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">{viewPlayer.position}</span>
+                                            <span className="bg-slate-100 text-slate-700 text-sm font-semibold px-3 py-1 rounded-full">{viewPlayer.age} Years Old</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* 🌟 NEW: Club Submitted By Info */}
+                                <div className="lg:ml-auto bg-blue-50/50 border border-blue-100 p-4 rounded-2xl flex items-center gap-4 shadow-sm w-full lg:w-auto shrink-0">
+                                    <div className="w-14 h-14 bg-white rounded-full border-2 border-blue-200 overflow-hidden shadow-sm flex items-center justify-center shrink-0 p-1">
+                                        {viewPlayer.Club?.logo_url ? (
+                                            <img src={getDriveImageUrl(viewPlayer.Club.logo_url)} className="w-full h-full object-contain rounded-full" alt="Club Logo" />
+                                        ) : (
+                                            <Shield className="w-6 h-6 text-blue-300" />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] uppercase font-bold text-blue-600 tracking-wider">Submitted By</p>
+                                        <p className="font-extrabold text-slate-900 text-lg">{viewPlayer.Club?.name || "Independent Player"}</p>
                                     </div>
                                 </div>
                             </div>
@@ -208,30 +248,40 @@ const ApplicationsView = () => {
                                     <section>
                                         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4"><span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Documents</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                                                <p className="font-semibold mb-3 text-slate-700">Gov Document 1</p>
-                                                {viewPlayer.gov_doc_1_url ? (
-                                                    <iframe src={getDriveImageUrl(viewPlayer.gov_doc_1_url)} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Gov Doc 1"></iframe>
-                                                ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
-                                            </div>
-                                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                                                <p className="font-semibold mb-3 text-slate-700">Gov Document 2</p>
-                                                {viewPlayer.gov_doc_2_url ? (
-                                                    <iframe src={getDriveImageUrl(viewPlayer.gov_doc_2_url)} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Gov Doc 2"></iframe>
-                                                ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
-                                            </div>
-                                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                                                <p className="font-semibold mb-3 text-slate-700">Gov Document 3</p>
-                                                {viewPlayer.gov_doc_3_url ? (
-                                                    <iframe src={getDriveImageUrl(viewPlayer.gov_doc_3_url)} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Gov Doc 3"></iframe>
-                                                ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
-                                            </div>
-                                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                                                <p className="font-semibold mb-3 text-slate-700">Fitness Certificate</p>
-                                                {viewPlayer.fitness_certificate_url ? (
-                                                    <iframe src={getDriveImageUrl(viewPlayer.fitness_certificate_url)} className="w-full h-72 border border-slate-100 rounded-lg bg-slate-50" title="Fitness Certificate"></iframe>
-                                                ) : <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />}
-                                            </div>
+                                            
+                                            {/* Helper function to render documents beautifully with Expand button */}
+                                            {[
+                                                { label: "Gov Document 1", url: viewPlayer.gov_doc_1_url },
+                                                { label: "Gov Document 2", url: viewPlayer.gov_doc_2_url },
+                                                { label: "Gov Document 3", url: viewPlayer.gov_doc_3_url },
+                                                { label: "Fitness Certificate", url: viewPlayer.fitness_certificate_url },
+                                            ].map((doc, idx) => (
+                                                <div key={idx} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col">
+                                                    <div className="flex justify-between items-start mb-3">
+                                                        <p className="font-semibold text-slate-700">{doc.label}</p>
+                                                        {doc.url && (
+                                                            <button 
+                                                                onClick={() => setFullscreenDoc({ label: doc.label, url: getDriveImageUrl(doc.url) })}
+                                                                className="p-1.5 bg-slate-100 hover:bg-emerald-100 text-slate-500 hover:text-emerald-700 rounded-lg transition-colors"
+                                                                title="View Fullscreen"
+                                                            >
+                                                                <Maximize2 className="w-4 h-4" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    {doc.url ? (
+                                                        <div className="relative group flex-grow h-72 border border-slate-100 rounded-lg overflow-hidden bg-slate-50">
+                                                            <iframe src={getDriveImageUrl(doc.url)} className="w-full h-full border-0" title={doc.label}></iframe>
+                                                            {/* Overlay to prevent accidental clicks inside iframe while scrolling */}
+                                                            <div className="absolute inset-0 z-10 hidden md:block" onClick={() => setFullscreenDoc({ label: doc.label, url: getDriveImageUrl(doc.url) })}></div>
+                                                        </div>
+                                                    ) : (
+                                                        <img src="https://placehold.co/600x400?text=No+Document" className="w-full h-72 object-contain border border-slate-100 rounded-lg bg-slate-50" alt="No Doc" />
+                                                    )}
+                                                </div>
+                                            ))}
+
                                         </div>
                                     </section>
                                 </div>
@@ -384,7 +434,7 @@ const ApplicationsView = () => {
                         </div>
 
                         {/* Action Bar */}
-                        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 rounded-b-2xl">
+                        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 rounded-b-2xl shrink-0">
                             <div className="flex items-center gap-3 w-full sm:w-auto">
                                 <label className="text-sm font-bold text-slate-700 uppercase tracking-wide">Action:</label>
                                 <select value={actionStatus} onChange={(e) => setActionStatus(e.target.value)} className="border border-slate-300 rounded-xl p-2.5 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 min-w-[180px] shadow-sm cursor-pointer bg-white">
