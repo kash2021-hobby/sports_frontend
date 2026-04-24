@@ -477,7 +477,7 @@ const PlayerProfileForm = () => {
                                     className="w-full bg-emerald-800/50 border border-emerald-700 p-4 rounded-xl focus:bg-white focus:text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 transition-all text-white font-bold tracking-wide cursor-pointer appearance-none"
                                     required
                                 >
-                                    <option value="" className="text-slate-900">-- Select Target Club --</option>
+                                    <option value="" className="text-slate-900">-- Select Team --</option>
                                     {clubs.map(club => (
                                         <option key={club.id} value={club.id} className="text-slate-900">
                                             {club.name} ({club.city})
