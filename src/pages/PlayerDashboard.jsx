@@ -84,7 +84,7 @@ export default function PlayerDashboard() {
     /* ===============================
        HELPERS & LOGOUT
     ================================ */
-    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+    const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://drive.google.com/uc?export=view&id=${fileId}`; };
 
     const handleLogout = () => {
         if (window.confirm("Are you sure you want to log out?")) {
@@ -108,10 +108,9 @@ export default function PlayerDashboard() {
         );
     }
 
-    // 🌟 THE FIX: Extract the jersey number from the Teams array if it exists
+    // Extract the jersey number from the Teams array if it exists
     let displayJerseyNumber = "TBD";
     if (playerData?.Teams && playerData.Teams.length > 0) {
-        // Find the first team and check its junction table (TeamPlayer)
         const teamData = playerData.Teams[0];
         if (teamData.TeamPlayer && teamData.TeamPlayer.jersey_number) {
             displayJerseyNumber = teamData.TeamPlayer.jersey_number;
@@ -224,7 +223,6 @@ export default function PlayerDashboard() {
                                     <div className="text-right">
                                         <p className="text-[10px] uppercase text-slate-400 font-black tracking-widest mb-1">Jersey</p>
                                         <p className="font-black text-2xl text-emerald-400 leading-none">
-                                            {/* 🌟 THE FIX: Display the actual jersey number! */}
                                             {displayJerseyNumber}
                                         </p>
                                     </div>
@@ -355,7 +353,16 @@ export default function PlayerDashboard() {
                                 <div key={ev.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 transition-colors shadow-sm">
                                     <div className="flex items-center gap-4">
                                         <div className="font-black text-slate-300 w-8 text-right">{ev.minute}'</div>
-                                        <div className={`w-2 h-8 rounded-full ${ev.type === 'Goal' ? 'bg-emerald-500' : ev.type === 'Yellow Card' ? 'bg-amber-400' : 'bg-rose-500'}`}></div>
+                                        
+                                        {/* 🌟 THE FIX: Added dynamic colors for the new event types! */}
+                                        <div className={`w-2 h-8 rounded-full ${
+                                            ev.type === 'Goal' ? 'bg-emerald-500' : 
+                                            ev.type === 'Penalty Goal' ? 'bg-orange-500' :
+                                            ev.type === 'Yellow Card' ? 'bg-amber-400' : 
+                                            ev.type === 'Red Card' ? 'bg-rose-500' :
+                                            'bg-slate-400' // Offside
+                                        }`}></div>
+                                        
                                         <div>
                                             <p className="font-bold text-slate-800 text-sm">{ev.type}</p>
                                             <p className="text-xs text-slate-500 font-semibold mt-0.5">vs {ev.match_name.split(' vs ').find(name => !name.includes("TBD")) || ev.match_name}</p>
