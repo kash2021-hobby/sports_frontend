@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Pause, Square, Activity, Clock, Flag, FileWarning, Trophy, ArrowRightLeft, User, LogOut, Calendar, MapPin } from 'lucide-react';
+import { Play, Pause, Square, Activity, Clock, Flag, FileWarning, Trophy, ArrowRightLeft, User, LogOut, Calendar, MapPin, Target } from 'lucide-react';
 
 export default function RefereeDashboard({ user }) {
     const navigate = useNavigate();
@@ -94,8 +94,9 @@ export default function RefereeDashboard({ user }) {
     };
     
     const currentMinute = Math.floor(timeInSeconds / 60);
-    const team1Score = events.filter(e => e.type === 'Goal' && e.teamId === liveMatch?.Team1?.id).length;
-    const team2Score = events.filter(e => e.type === 'Goal' && e.teamId === liveMatch?.Team2?.id).length;
+    // 🌟 Count both regular Goals and Penalty Goals for the main score
+    const team1Score = events.filter(e => (e.type === 'Goal' || e.type === 'Penalty Goal') && e.teamId === liveMatch?.Team1?.id).length;
+    const team2Score = events.filter(e => (e.type === 'Goal' || e.type === 'Penalty Goal') && e.teamId === liveMatch?.Team2?.id).length;
 
     const hasMatchStarted = isRunning || timeInSeconds > 0;
 
@@ -121,8 +122,8 @@ export default function RefereeDashboard({ user }) {
     };
 
     const syncLiveToDatabase = async (updatedEventsList) => {
-        const newTeam1Score = updatedEventsList.filter(e => e.type === 'Goal' && e.teamId === liveMatch?.Team1?.id).length;
-        const newTeam2Score = updatedEventsList.filter(e => e.type === 'Goal' && e.teamId === liveMatch?.Team2?.id).length;
+        const newTeam1Score = updatedEventsList.filter(e => (e.type === 'Goal' || e.type === 'Penalty Goal') && e.teamId === liveMatch?.Team1?.id).length;
+        const newTeam2Score = updatedEventsList.filter(e => (e.type === 'Goal' || e.type === 'Penalty Goal') && e.teamId === liveMatch?.Team2?.id).length;
 
         try {
             await fetch(`https://backend.dhsa.co.in/admin/matches/${liveMatch.id}/update-score`, {
@@ -203,7 +204,6 @@ export default function RefereeDashboard({ user }) {
             });
             if (res.ok) {
                 alert("Match successfully completed!");
-                // 🌟 3. WIPE LOCAL MEMORY AFTER COMPLETION
                 localStorage.removeItem('referee_live_session');
                 setLiveMatch(null);
                 setTimeInSeconds(0);
@@ -249,8 +249,8 @@ export default function RefereeDashboard({ user }) {
 
             <main className="flex-1 p-4 md:p-8">
                 {liveMatch ? (
-                    <div className="animate-in fade-in duration-500 max-w-6xl mx-auto space-y-6 pb-20">
-                        {/* Live Match UI */}
+                    <div className="animate-in fade-in duration-500 max-w-7xl mx-auto space-y-6 pb-20">
+                        {/* Live Match Header UI */}
                         <div className="bg-slate-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-slate-800 text-white relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-4 opacity-10"><Activity className="w-48 h-48 animate-pulse"/></div>
                             <div className="text-center mb-6">
@@ -274,34 +274,71 @@ export default function RefereeDashboard({ user }) {
                         {!hasMatchStarted && (
                             <div className="bg-amber-100 border border-amber-300 text-amber-800 p-4 rounded-2xl flex items-center justify-center gap-2 font-bold shadow-sm">
                                 <FileWarning className="w-5 h-5" />
-                                Please press 'Start Match' above before recording goals or cards.
+                                Please press 'Start Match' above before recording events.
                             </div>
                         )}
 
                         <div className={`grid grid-cols-1 lg:grid-cols-4 gap-6 transition-opacity duration-300 ${!hasMatchStarted ? 'opacity-50' : 'opacity-100'}`}>
-                            {/* TEAM 1 CONTROLS */}
-                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
-                                <h3 className="font-black text-lg text-center border-b pb-3 truncate">{liveMatch.Team1?.name}</h3>
-                                <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team1.id, type: 'Goal', teamName: liveMatch.Team1.name })} className="w-full bg-emerald-50 text-emerald-700 font-bold py-4 rounded-xl border border-emerald-100 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"><Activity className="w-5 h-5"/> Add Goal</button>
-                                <div className="flex gap-2">
-                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team1.id, type: 'Yellow Card', teamName: liveMatch.Team1.name })} className="flex-1 bg-amber-50 text-amber-700 font-bold py-3 rounded-xl border border-amber-100 hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all">Yellow</button>
-                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team1.id, type: 'Red Card', teamName: liveMatch.Team1.name })} className="flex-1 bg-rose-50 text-rose-700 font-bold py-3 rounded-xl border border-rose-100 hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all">Red</button>
+                            
+                            {/* 🌟 TEAM 1 CONTROLS (Updated Grid) */}
+                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col h-full">
+                                <h3 className="font-black text-lg text-center border-b pb-3 mb-4 truncate text-slate-800">{liveMatch.Team1?.name}</h3>
+                                
+                                <div className="grid grid-cols-2 gap-3 flex-1">
+                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team1.id, type: 'Goal', teamName: liveMatch.Team1.name })} className="col-span-2 bg-emerald-50 text-emerald-700 font-bold py-4 rounded-xl border border-emerald-100 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all shadow-sm">
+                                        <Activity className="w-5 h-5"/> Add Goal
+                                    </button>
+                                    
+                                    {/* NEW: Penalty Goal */}
+                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team1.id, type: 'Penalty Goal', teamName: liveMatch.Team1.name })} className="col-span-2 bg-orange-50 text-orange-700 font-bold py-3 rounded-xl border border-orange-100 hover:bg-orange-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all shadow-sm">
+                                        <Target className="w-4 h-4"/> Penalty Goal
+                                    </button>
+
+                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team1.id, type: 'Yellow Card', teamName: liveMatch.Team1.name })} className="bg-amber-50 text-amber-700 font-bold py-3 rounded-xl border border-amber-100 hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
+                                        Yellow
+                                    </button>
+                                    
+                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team1.id, type: 'Red Card', teamName: liveMatch.Team1.name })} className="bg-rose-50 text-rose-700 font-bold py-3 rounded-xl border border-rose-100 hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
+                                        Red
+                                    </button>
+
+                                    {/* NEW: Offside */}
+                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team1.id, type: 'Offside', teamName: liveMatch.Team1.name })} className="bg-slate-100 text-slate-700 font-bold py-3 rounded-xl border border-slate-200 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-all shadow-sm">
+                                        <Flag className="w-4 h-4"/> Offside
+                                    </button>
+
+                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team1.id, type: 'Substitution', teamName: liveMatch.Team1.name })} className="bg-blue-50 text-blue-700 font-bold py-3 rounded-xl border border-blue-100 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-all shadow-sm">
+                                        <ArrowRightLeft className="w-4 h-4"/> Sub
+                                    </button>
                                 </div>
-                                <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team1.id, type: 'Substitution', teamName: liveMatch.Team1.name })} className="w-full bg-blue-50 text-blue-700 font-bold py-4 rounded-xl border border-blue-100 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"><ArrowRightLeft className="w-5 h-5"/> Substitution</button>
                             </div>
 
                             {/* TIMELINE */}
-                            <div className="bg-slate-50 rounded-3xl p-4 lg:col-span-2 h-[400px] flex flex-col border border-slate-200">
+                            <div className="bg-slate-50 rounded-3xl p-4 lg:col-span-2 h-[450px] flex flex-col border border-slate-200 shadow-inner">
                                 <h3 className="font-black text-slate-800 text-center mb-4">Match Timeline</h3>
                                 <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar px-2">
                                     {events.length === 0 ? <p className="text-center text-slate-400 mt-20 font-medium">No events recorded yet.</p> :
                                         events.map(ev => (
                                             <div key={ev.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 animate-in slide-in-from-left-2">
-                                                <div className="font-black text-slate-400 w-8">{ev.minute}'</div>
-                                                <div className={`w-3 h-8 rounded-full ${ev.type === 'Goal' ? 'bg-emerald-500' : ev.type === 'Substitution' ? 'bg-blue-500' : 'bg-rose-500'}`}></div>
+                                                <div className="font-black text-slate-400 w-8 text-right">{ev.minute}'</div>
+                                                
+                                                {/* 🌟 DYNAMIC EVENT COLORS */}
+                                                <div className={`w-3 h-8 rounded-full shrink-0 ${
+                                                    ev.type === 'Goal' ? 'bg-emerald-500' : 
+                                                    ev.type === 'Penalty Goal' ? 'bg-orange-500' :
+                                                    ev.type === 'Substitution' ? 'bg-blue-500' : 
+                                                    ev.type === 'Yellow Card' ? 'bg-amber-400' :
+                                                    ev.type === 'Red Card' ? 'bg-rose-500' :
+                                                    'bg-slate-400' // Offside
+                                                }`}></div>
+                                                
                                                 <div className="flex-1 text-sm">
                                                     <p className="font-black text-slate-800">{ev.type}</p>
                                                     <p className="text-slate-500 font-medium">{ev.type === 'Substitution' ? `${ev.playerOnName} for ${ev.playerOffName}` : ev.playerName}</p>
+                                                </div>
+                                                
+                                                <div className="text-xs font-bold text-slate-300 uppercase shrink-0">
+                                                    {ev.teamId === liveMatch.Team1.id ? liveMatch.Team1.name : liveMatch.Team2.name}
                                                 </div>
                                             </div>
                                         ))
@@ -309,16 +346,39 @@ export default function RefereeDashboard({ user }) {
                                 </div>
                             </div>
 
-                            {/* TEAM 2 CONTROLS */}
-                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
-                                <h3 className="font-black text-lg text-center border-b pb-3 truncate">{liveMatch.Team2?.name}</h3>
-                                <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team2.id, type: 'Goal', teamName: liveMatch.Team2.name })} className="w-full bg-emerald-50 text-emerald-700 font-bold py-4 rounded-xl border border-emerald-100 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"><Activity className="w-5 h-5"/> Add Goal</button>
-                                <div className="flex gap-2">
-                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team2.id, type: 'Yellow Card', teamName: liveMatch.Team2.name })} className="flex-1 bg-amber-50 text-amber-700 font-bold py-3 rounded-xl border border-amber-100 hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all">Yellow</button>
-                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team2.id, type: 'Red Card', teamName: liveMatch.Team2.name })} className="flex-1 bg-rose-50 text-rose-700 font-bold py-3 rounded-xl border border-rose-100 hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all">Red</button>
+                            {/* 🌟 TEAM 2 CONTROLS (Updated Grid) */}
+                            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col h-full">
+                                <h3 className="font-black text-lg text-center border-b pb-3 mb-4 truncate text-slate-800">{liveMatch.Team2?.name}</h3>
+                                
+                                <div className="grid grid-cols-2 gap-3 flex-1">
+                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team2.id, type: 'Goal', teamName: liveMatch.Team2.name })} className="col-span-2 bg-emerald-50 text-emerald-700 font-bold py-4 rounded-xl border border-emerald-100 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all shadow-sm">
+                                        <Activity className="w-5 h-5"/> Add Goal
+                                    </button>
+
+                                    {/* NEW: Penalty Goal */}
+                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team2.id, type: 'Penalty Goal', teamName: liveMatch.Team2.name })} className="col-span-2 bg-orange-50 text-orange-700 font-bold py-3 rounded-xl border border-orange-100 hover:bg-orange-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all shadow-sm">
+                                        <Target className="w-4 h-4"/> Penalty Goal
+                                    </button>
+
+                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team2.id, type: 'Yellow Card', teamName: liveMatch.Team2.name })} className="bg-amber-50 text-amber-700 font-bold py-3 rounded-xl border border-amber-100 hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
+                                        Yellow
+                                    </button>
+                                    
+                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team2.id, type: 'Red Card', teamName: liveMatch.Team2.name })} className="bg-rose-50 text-rose-700 font-bold py-3 rounded-xl border border-rose-100 hover:bg-rose-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
+                                        Red
+                                    </button>
+
+                                    {/* NEW: Offside */}
+                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team2.id, type: 'Offside', teamName: liveMatch.Team2.name })} className="bg-slate-100 text-slate-700 font-bold py-3 rounded-xl border border-slate-200 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-all shadow-sm">
+                                        <Flag className="w-4 h-4"/> Offside
+                                    </button>
+
+                                    <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team2.id, type: 'Substitution', teamName: liveMatch.Team2.name })} className="bg-blue-50 text-blue-700 font-bold py-3 rounded-xl border border-blue-100 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-all shadow-sm">
+                                        <ArrowRightLeft className="w-4 h-4"/> Sub
+                                    </button>
                                 </div>
-                                <button disabled={!hasMatchStarted} onClick={() => setEventModal({ isOpen: true, teamId: liveMatch.Team2.id, type: 'Substitution', teamName: liveMatch.Team2.name })} className="w-full bg-blue-50 text-blue-700 font-bold py-4 rounded-xl border border-blue-100 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"><ArrowRightLeft className="w-5 h-5"/> Substitution</button>
                             </div>
+
                         </div>
                     </div>
                 ) : (
@@ -371,7 +431,7 @@ export default function RefereeDashboard({ user }) {
                                                 </div>
                                             )}
                                             
-                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                                                 {typeMatches.map((match) => (
                                                     <div key={match.id} className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-all group">
                                                         
@@ -405,7 +465,7 @@ export default function RefereeDashboard({ user }) {
                                             </div>
                                         </div>
                                     );
-                            })
+                                })
                         )}
                     </div>
                 )}
@@ -415,10 +475,19 @@ export default function RefereeDashboard({ user }) {
             {eventModal.isOpen && (
                 <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
                     <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md shadow-2xl flex flex-col max-h-[85vh] animate-in slide-in-from-bottom-10 sm:zoom-in-95">
-                        <div className={`p-6 text-white text-center shrink-0 sm:rounded-t-3xl ${eventModal.type === 'Goal' ? 'bg-emerald-600' : eventModal.type === 'Substitution' ? 'bg-blue-600' : 'bg-rose-600'}`}>
+                        
+                        {/* 🌟 DYNAMIC MODAL HEADER COLORS */}
+                        <div className={`p-6 text-white text-center shrink-0 sm:rounded-t-3xl ${
+                            eventModal.type === 'Goal' ? 'bg-emerald-600' : 
+                            eventModal.type === 'Penalty Goal' ? 'bg-orange-500' :
+                            eventModal.type === 'Substitution' ? 'bg-blue-600' : 
+                            eventModal.type === 'Offside' ? 'bg-slate-600' :
+                            'bg-rose-600'
+                        }`}>
                             <p className="text-xs font-black uppercase tracking-widest opacity-80">{eventModal.teamName}</p>
                             <h3 className="text-2xl font-black">{eventModal.type}</h3>
                         </div>
+                        
                         <div className="p-6 overflow-y-auto bg-slate-50 flex-1 custom-scrollbar">
                             {eventModal.type === 'Substitution' ? (
                                 <div className="space-y-4">
