@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, CheckCircle, Clock, Eye, Users, Palette } from 'lucide-react';
+import { Shield, CheckCircle, XCircle, Clock, Eye, Users, Palette } from 'lucide-react'; // 🌟 Added XCircle for Reject
 
-// 🌟 THE HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
- const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
+// THE HELPER FUNCTION FOR GOOGLE DRIVE IMAGES
+const getDriveImageUrl = (url) => { if (!url) return "https://placehold.co/150x150?text=No+Photo"; const match = url.match(/\/d\/(.*?)\//) || url.match(/id=(.*?)(&|$)/); const fileId = match ? match[1] : null; if (!fileId) return url; return `https://lh3.googleusercontent.com/d/${fileId}`; };
 
 export default function TeamsPage() {
     const [teams, setTeams] = useState([]);
@@ -58,12 +58,41 @@ export default function TeamsPage() {
         }
     };
 
+    // 🌟 THE NEW REJECT FUNCTION
+    const handleReject = async (teamId) => {
+        if (!window.confirm("Are you sure you want to reject this team?")) return;
+        
+        setIsProcessing(true);
+        try {
+            const res = await fetch(`https://backend.dhsa.co.in/admin/teams/${teamId}/reject`, {
+                method: 'PUT',
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (res.ok) {
+                setTeams(teams.map(team => 
+                    team.id === teamId ? { ...team, status: "Rejected" } : team
+                ));
+                setViewTeam(null);
+            } else {
+                alert("Failed to reject team.");
+            }
+        } catch (error) {
+            console.error("Error rejecting team:", error);
+            alert("Server error.");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     if (loading) {
         return <div className="p-8 text-slate-500 font-medium animate-pulse">Loading teams...</div>;
     }
 
+    // 🌟 SEPARATE TEAMS INTO THREE CATEGORIES
     const pendingTeams = teams.filter(t => t.status === "Pending Approval");
     const approvedTeams = teams.filter(t => t.status === "Approved");
+    const rejectedTeams = teams.filter(t => t.status === "Rejected");
 
     return (
         <div className="animate-in fade-in duration-500 space-y-10 relative">
@@ -73,7 +102,7 @@ export default function TeamsPage() {
                 <p className="text-slate-500 mt-1">Review and approve official club rosters for tournaments.</p>
             </header>
 
-            {/* PENDING APPROVALS SECTION */}
+            {/* 1. PENDING APPROVALS SECTION */}
             <section>
                 <div className="flex items-center gap-3 mb-6">
                     <h2 className="text-xl font-bold text-slate-800">Pending Approvals</h2>
@@ -87,7 +116,7 @@ export default function TeamsPage() {
                         No teams are currently waiting for approval.
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         {pendingTeams.map(team => (
                             <div key={team.id} className="bg-white border-2 border-amber-200 rounded-2xl p-6 shadow-sm flex flex-col relative overflow-hidden group">
                                 <div className="absolute top-0 right-0 bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1.5 rounded-bl-xl flex items-center gap-1">
@@ -95,29 +124,41 @@ export default function TeamsPage() {
                                 </div>
                                 
                                 <div className="flex items-center gap-4 mb-6 mt-2">
-                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center border border-slate-100 shadow-inner" style={{ backgroundColor: team.jersey_color || '#f8fafc' }}>
+                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center border border-slate-100 shadow-inner shrink-0" style={{ backgroundColor: team.jersey_color || '#f8fafc' }}>
                                         <Shield className={`w-7 h-7 ${team.jersey_color ? 'text-white mix-blend-difference' : 'text-slate-400'}`} />
                                     </div>
-                                    <div>
-                                        <h3 className="font-bold text-slate-900 text-lg leading-tight">{team.name}</h3>
-                                        <p className="text-xs text-slate-500 font-bold uppercase mt-1 tracking-wider">{team.Club?.name || "Unknown Club"}</p>
+                                    <div className="overflow-hidden">
+                                        <h3 className="font-bold text-slate-900 text-lg leading-tight truncate" title={team.name}>{team.name}</h3>
+                                        <p className="text-xs text-slate-500 font-bold uppercase mt-1 tracking-wider truncate" title={team.Club?.name}>{team.Club?.name || "Unknown Club"}</p>
                                     </div>
                                 </div>
                                 
-                                <div className="mt-auto flex gap-2">
+                                <div className="mt-auto flex flex-wrap gap-2">
                                     <button 
                                         onClick={() => setViewTeam(team)}
-                                        className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                                        className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm mb-1"
                                     >
                                         <Eye className="w-4 h-4" /> View Details
                                     </button>
-                                    <button 
-                                        onClick={() => handleApprove(team.id)}
-                                        disabled={isProcessing}
-                                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md shadow-emerald-200 active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2 text-sm"
-                                    >
-                                        <CheckCircle className="w-4 h-4" /> Approve
-                                    </button>
+                                    
+                                    <div className="flex w-full gap-2">
+                                        {/* 🌟 REJECT BUTTON */}
+                                        <button 
+                                            onClick={() => handleReject(team.id)}
+                                            disabled={isProcessing}
+                                            className="flex-1 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold py-2.5 rounded-xl transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2 text-sm"
+                                        >
+                                            <XCircle className="w-4 h-4" /> Reject
+                                        </button>
+                                        {/* APPROVE BUTTON */}
+                                        <button 
+                                            onClick={() => handleApprove(team.id)}
+                                            disabled={isProcessing}
+                                            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md shadow-emerald-200 active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2 text-sm"
+                                        >
+                                            <CheckCircle className="w-4 h-4" /> Approve
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -125,7 +166,7 @@ export default function TeamsPage() {
                 )}
             </section>
 
-            {/* REGISTERED TEAMS SECTION */}
+            {/* 2. REGISTERED TEAMS SECTION */}
             <section>
                 <div className="flex items-center gap-3 mb-6 border-t border-slate-200 pt-8">
                     <h2 className="text-xl font-bold text-slate-800">Registered Teams</h2>
@@ -142,15 +183,48 @@ export default function TeamsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {approvedTeams.map(team => (
                             <div key={team.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:border-emerald-200 hover:shadow-md transition-all group cursor-pointer" onClick={() => setViewTeam(team)}>
-                                <div className="w-14 h-14 rounded-xl flex items-center justify-center border border-slate-100 shadow-inner group-hover:scale-105 transition-transform" style={{ backgroundColor: team.jersey_color || '#f8fafc' }}>
+                                <div className="w-14 h-14 rounded-xl flex items-center justify-center border border-slate-100 shadow-inner group-hover:scale-105 transition-transform shrink-0" style={{ backgroundColor: team.jersey_color || '#f8fafc' }}>
                                     <Shield className={`w-7 h-7 ${team.jersey_color ? 'text-white mix-blend-difference' : 'text-slate-400'}`} />
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="font-bold text-slate-900 text-lg leading-tight">{team.name}</h3>
-                                    <p className="text-xs text-slate-500 font-bold uppercase mt-1 tracking-wider">{team.Club?.name}</p>
+                                <div className="flex-1 overflow-hidden">
+                                    <h3 className="font-bold text-slate-900 text-lg leading-tight truncate" title={team.name}>{team.name}</h3>
+                                    <p className="text-xs text-slate-500 font-bold uppercase mt-1 tracking-wider truncate" title={team.Club?.name}>{team.Club?.name}</p>
                                 </div>
-                                <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600" title="Approved">
+                                <div className="w-8 h-8 shrink-0 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600" title="Approved">
                                     <CheckCircle className="w-5 h-5" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
+
+            {/* 🌟 3. REJECTED TEAMS SECTION */}
+            <section>
+                <div className="flex items-center gap-3 mb-6 border-t border-slate-200 pt-8">
+                    <h2 className="text-xl font-bold text-slate-800">Rejected Teams</h2>
+                    <span className="bg-rose-100 text-rose-800 py-1 px-3 rounded-full text-sm font-bold">
+                        {rejectedTeams.length}
+                    </span>
+                </div>
+
+                {rejectedTeams.length === 0 ? (
+                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-8 text-center text-slate-500 font-medium">
+                        No teams have been rejected.
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-80 hover:opacity-100 transition-opacity">
+                        {rejectedTeams.map(team => (
+                            <div key={team.id} className="bg-white p-6 rounded-2xl shadow-sm border border-rose-100 flex items-center gap-4 cursor-pointer" onClick={() => setViewTeam(team)}>
+                                <div className="w-14 h-14 rounded-xl flex items-center justify-center border border-slate-100 shadow-inner shrink-0" style={{ backgroundColor: team.jersey_color || '#f8fafc' }}>
+                                    <Shield className={`w-7 h-7 ${team.jersey_color ? 'text-white mix-blend-difference' : 'text-slate-400'}`} />
+                                </div>
+                                <div className="flex-1 overflow-hidden">
+                                    <h3 className="font-bold text-slate-900 text-lg leading-tight truncate line-through decoration-rose-300" title={team.name}>{team.name}</h3>
+                                    <p className="text-xs text-slate-500 font-bold uppercase mt-1 tracking-wider truncate" title={team.Club?.name}>{team.Club?.name}</p>
+                                </div>
+                                <div className="w-8 h-8 shrink-0 rounded-full bg-rose-50 flex items-center justify-center text-rose-600" title="Rejected">
+                                    <XCircle className="w-5 h-5" />
                                 </div>
                             </div>
                         ))}
@@ -169,7 +243,7 @@ export default function TeamsPage() {
                         <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                             <div>
                                 <h2 className="text-2xl font-extrabold text-slate-900">Team Roster Review</h2>
-                                <p className="text-sm font-medium text-slate-500 mt-1">Verify players before approving this team.</p>
+                                <p className="text-sm font-medium text-slate-500 mt-1">Verify players before making a decision.</p>
                             </div>
                             <button onClick={() => setViewTeam(null)} className="p-2 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-full transition-colors">✕</button>
                         </div>
@@ -178,12 +252,22 @@ export default function TeamsPage() {
                         <div className="p-8 overflow-y-auto custom-scrollbar flex-1 space-y-8">
                             
                             {/* Team Info Card */}
-                            <div className="flex items-center gap-6 bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                                <div className="w-20 h-20 rounded-2xl flex items-center justify-center border-2 border-slate-100 shadow-inner" style={{ backgroundColor: viewTeam.jersey_color || '#f8fafc' }}>
+                            <div className="flex items-center gap-6 bg-white border border-slate-200 p-6 rounded-2xl shadow-sm relative overflow-hidden">
+                                
+                                {/* Status Badge inside Modal */}
+                                <div className={`absolute top-0 right-0 text-xs font-bold px-4 py-1.5 rounded-bl-xl flex items-center gap-1 ${
+                                    viewTeam.status === "Approved" ? "bg-emerald-100 text-emerald-700" : 
+                                    viewTeam.status === "Rejected" ? "bg-rose-100 text-rose-700" : 
+                                    "bg-amber-100 text-amber-700"
+                                }`}>
+                                    {viewTeam.status}
+                                </div>
+
+                                <div className="w-20 h-20 rounded-2xl flex items-center justify-center border-2 border-slate-100 shadow-inner shrink-0" style={{ backgroundColor: viewTeam.jersey_color || '#f8fafc' }}>
                                     <Shield className={`w-10 h-10 ${viewTeam.jersey_color ? 'text-white mix-blend-difference' : 'text-slate-400'}`} />
                                 </div>
                                 <div>
-                                    <h3 className="text-3xl font-black text-slate-900">{viewTeam.name}</h3>
+                                    <h3 className={`text-3xl font-black text-slate-900 ${viewTeam.status === "Rejected" ? 'line-through decoration-rose-300' : ''}`}>{viewTeam.name}</h3>
                                     <div className="flex items-center gap-4 mt-2">
                                         <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">{viewTeam.Club?.name}</p>
                                         <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
@@ -206,14 +290,14 @@ export default function TeamsPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {viewTeam.Players.map(player => (
                                             <div key={player.id} className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                                <div className="w-12 h-12 bg-white rounded-lg flex flex-col items-center justify-center border border-slate-200 shadow-sm">
+                                                <div className="w-12 h-12 bg-white rounded-lg flex flex-col items-center justify-center border border-slate-200 shadow-sm shrink-0">
                                                     <span className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-0.5">No.</span>
                                                     <span className="font-black text-slate-900 leading-none">{player.TeamPlayer?.jersey_number || '-'}</span>
                                                 </div>
-                                                <img src={getDriveImageUrl(player.player_photo_url)} alt={player.full_name} className="w-12 h-12 rounded-full object-cover border border-slate-200" />
-                                                <div>
-                                                    <h5 className="font-bold text-slate-900 leading-tight">{player.full_name}</h5>
-                                                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md mt-1 inline-block">
+                                                <img src={getDriveImageUrl(player.player_photo_url)} alt={player.full_name} className="w-12 h-12 rounded-full object-cover border border-slate-200 shrink-0" />
+                                                <div className="overflow-hidden">
+                                                    <h5 className="font-bold text-slate-900 leading-tight truncate" title={player.full_name}>{player.full_name}</h5>
+                                                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md mt-1 inline-block truncate max-w-full">
                                                         {player.TeamPlayer?.assigned_position || 'Unassigned'}
                                                     </span>
                                                 </div>
@@ -229,14 +313,25 @@ export default function TeamsPage() {
                             <button onClick={() => setViewTeam(null)} className="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
                                 Close
                             </button>
+                            
+                            {/* 🌟 ACTION BUTTONS SHOW IF PENDING */}
                             {viewTeam.status === "Pending Approval" && (
-                                <button 
-                                    onClick={() => handleApprove(viewTeam.id)} 
-                                    disabled={isProcessing}
-                                    className="px-8 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-95 disabled:opacity-60 flex items-center gap-2"
-                                >
-                                    <CheckCircle className="w-5 h-5" /> {isProcessing ? "Processing..." : "Approve Team"}
-                                </button>
+                                <>
+                                    <button 
+                                        onClick={() => handleReject(viewTeam.id)} 
+                                        disabled={isProcessing}
+                                        className="px-6 py-3 rounded-xl font-bold text-rose-700 bg-rose-100 hover:bg-rose-200 transition-all active:scale-95 disabled:opacity-60 flex items-center gap-2"
+                                    >
+                                        <XCircle className="w-5 h-5" /> Reject
+                                    </button>
+                                    <button 
+                                        onClick={() => handleApprove(viewTeam.id)} 
+                                        disabled={isProcessing}
+                                        className="px-8 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-95 disabled:opacity-60 flex items-center gap-2"
+                                    >
+                                        <CheckCircle className="w-5 h-5" /> {isProcessing ? "Processing..." : "Approve Team"}
+                                    </button>
+                                </>
                             )}
                         </div>
                     </div>
