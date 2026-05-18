@@ -5,7 +5,7 @@ import {
     UserCog, Shield, Trophy, Flag, Bell, 
     Menu, X, Search, ChevronRight, LogOut,
     History, ArrowRight, Calendar, 
-    ExternalLink, CheckCircle, Maximize2 
+    ExternalLink, CheckCircle, Maximize2, Settings // 🌟 ADDED SETTINGS ICON
 } from "lucide-react";
 import UsersPage from '../components/UsersPage';
 import CoachManagement from '../components/CoachManagement';
@@ -14,7 +14,7 @@ import NotificationsPage from '../components/NotificationsPage';
 import TeamsPage from '../components/TeamsPage';
 import TournamentsPage from '../components/TournamentsPage';
 import RefereePage from '../components/RefereePage';
-
+//new2
 /* =========================================================================
    GOOGLE DRIVE HELPER
 ========================================================================= */
@@ -35,7 +35,7 @@ const ApplicationsView = () => {
     // Search Query State
     const [searchQuery, setSearchQuery] = useState("");
 
-    // 🌟 NEW: Full-screen document state
+    // Full-screen document state
     const [fullscreenDoc, setFullscreenDoc] = useState(null);
 
     useEffect(() => {
@@ -167,7 +167,7 @@ const ApplicationsView = () => {
                 </div>
             )}
 
-            {/* 🌟 FULLSCREEN DOCUMENT MODAL */}
+            {/* FULLSCREEN DOCUMENT MODAL */}
             {fullscreenDoc && (
                 <div className="fixed inset-0 z-[200] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-4 md:p-8 animate-in zoom-in-95 duration-200">
                     <div className="w-full max-w-6xl flex justify-between items-center mb-4">
@@ -195,7 +195,7 @@ const ApplicationsView = () => {
                         
                         <div className="p-6 overflow-y-auto custom-scrollbar flex-grow">
                             
-                            {/* 🌟 CLUB & PLAYER HEADER */}
+                            {/* CLUB & PLAYER HEADER */}
                             <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 mb-8 items-start">
                                 {/* Player Info */}
                                 <div className="flex items-center gap-6">
@@ -209,7 +209,7 @@ const ApplicationsView = () => {
                                     </div>
                                 </div>
                                 
-                                {/* 🌟 NEW: Club Submitted By Info */}
+                                {/* Club Submitted By Info */}
                                 <div className="lg:ml-auto bg-blue-50/50 border border-blue-100 p-4 rounded-2xl flex items-center gap-4 shadow-sm w-full lg:w-auto shrink-0">
                                     <div className="w-14 h-14 bg-white rounded-full border-2 border-blue-200 overflow-hidden shadow-sm flex items-center justify-center shrink-0 p-1">
                                         {viewPlayer.Club?.logo_url ? (
@@ -387,20 +387,18 @@ const ApplicationsView = () => {
                             </div>
                             
                            {/* Verification Bar */}
-<div className="mt-8 bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
-    
-    {/* 🌟 THE FIX: Grouped the heading and the new bullet points together */}
-    <div>
-        <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
-            <Shield className="w-5 h-5" /> Mandatory Verification Step
-        </h3>
-        <ul className="list-disc list-inside text-xs text-slate-600 mt-2 space-y-1 ml-1 font-medium">
-            <li>Visit UIDAI portal and enter the player Aadhaar number.</li>
-            <li>Request the OTP from the player and download the E-Aadhaar.</li>
-        </ul>
-    </div>
-    
-    <div className="flex flex-col lg:flex-row items-start lg:items-end gap-4 mt-2">
+                            <div className="mt-8 bg-emerald-50 border border-emerald-200 rounded-2xl p-6 flex flex-col gap-4 shadow-sm">
+                                <div>
+                                    <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
+                                        <Shield className="w-5 h-5" /> Mandatory Verification Step
+                                    </h3>
+                                    <ul className="list-disc list-inside text-xs text-slate-600 mt-2 space-y-1 ml-1 font-medium">
+                                        <li>Visit UIDAI portal and enter the player Aadhaar number.</li>
+                                        <li>Request the OTP from the player and download the E-Aadhaar.</li>
+                                    </ul>
+                                </div>
+                                
+                                <div className="flex flex-col lg:flex-row items-start lg:items-end gap-4 mt-2">
                                     <a 
                                         href="https://myaadhaar.uidai.gov.in/genricDownloadAadhaar/en" 
                                         target="_blank" 
@@ -728,6 +726,140 @@ const TransferHistoryPage = () => {
 };
 
 /* =========================================================================
+   🌟 NEW: ADMIN SETTINGS COMPONENT (MPIN UPDATE)
+========================================================================= */
+const AdminSettings = () => {
+    const [currentMpin, setCurrentMpin] = useState("");
+    const [newMpin, setNewMpin] = useState("");
+    const [confirmMpin, setConfirmMpin] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
+//new
+    const handleUpdateMpin = async (e) => {
+        e.preventDefault();
+        setMessage("");
+        setError("");
+
+        if (newMpin !== confirmMpin) {
+            setError("New MPINs do not match.");
+            return;
+        }
+        if (newMpin.length < 4) {
+            setError("MPIN must be at least 4 digits.");
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            // Get the specific admin's ID from local storage safely
+            const userRaw = localStorage.getItem("currentUser");
+            let adminId = null;
+            
+            if (userRaw) {
+                const parsedData = JSON.parse(userRaw);
+                // Safely checks both common structures: parsedData.user.id OR parsedData.id
+                adminId = parsedData?.user?.id || parsedData?.id || null;
+            }
+
+            if (!adminId) {
+                setError("Could not verify your admin session. Please log out and log back in.");
+                setLoading(false);
+                return;
+            }
+
+            // Use API.put instead of fetch
+            const response = await API.put("/admin/update-mpin", { 
+                adminId, 
+                currentMpin, 
+                newMpin 
+            });
+
+            // Axios puts the response data inside .data
+            setMessage(response.data.message || "Your MPIN has been updated successfully!");
+            setCurrentMpin("");
+            setNewMpin("");
+            setConfirmMpin("");
+
+        } catch (err) {
+            // This safely grabs the exact error from the backend
+            if (err.response && err.response.data && err.response.data.error) {
+                setError(err.response.data.error);
+            } else {
+                setError(`Connection failed: ${err.message}`);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+    return (
+        <div className="animate-in fade-in duration-500 max-w-2xl mx-auto mt-10">
+            <header className="mb-8">
+                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Security Settings</h1>
+                <p className="text-slate-500 mt-1">Manage your personal admin account security.</p>
+            </header>
+
+            <form onSubmit={handleUpdateMpin} className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4 flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-emerald-500" /> Update Personal MPIN
+                </h2>
+
+                {message && <div className="mb-6 p-4 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl font-bold text-sm flex items-center gap-2"><CheckCircle className="w-5 h-5"/> {message}</div>}
+                {error && <div className="mb-6 p-4 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl font-bold text-sm">⚠️ {error}</div>}
+
+                <div className="space-y-5">
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Current MPIN</label>
+                        <input
+                            type="password"
+                            required
+                            maxLength="6"
+                            placeholder="Enter your current MPIN"
+                            value={currentMpin}
+                            onChange={(e) => setCurrentMpin(e.target.value.replace(/\D/g, ''))} // Only allow numbers
+                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold tracking-widest"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">New MPIN</label>
+                        <input
+                            type="password"
+                            required
+                            maxLength="6"
+                            placeholder="Enter new MPIN"
+                            value={newMpin}
+                            onChange={(e) => setNewMpin(e.target.value.replace(/\D/g, ''))}
+                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold tracking-widest"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Confirm New MPIN</label>
+                        <input
+                            type="password"
+                            required
+                            maxLength="6"
+                            placeholder="Confirm new MPIN"
+                            value={confirmMpin}
+                            onChange={(e) => setConfirmMpin(e.target.value.replace(/\D/g, ''))}
+                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold tracking-widest"
+                        />
+                    </div>
+                </div>
+
+                <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="mt-8 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition-all shadow-md active:scale-[0.98] disabled:bg-slate-400 flex justify-center items-center gap-2"
+                >
+                    {loading ? "Updating..." : "Save New MPIN"}
+                </button>
+            </form>
+        </div>
+    );
+};
+
+/* =========================================================================
    3. MAIN LAYOUT SHELL (WITH NOTIFICATION BADGES)
 ========================================================================= */
 export default function AdminControlPanel() {
@@ -746,7 +878,7 @@ export default function AdminControlPanel() {
             try {
                 const res = await API.get('/admin/dashboard-stats');
                 
-                // 🌟 THE FIX: Map the specific keys from backend response to the exact ID of the nav items
+                // MAP THE BADGE DATA DIRECTLY TO THIS NAV ITEM
                 setSidebarBadges({
                     "Applications": res.data.counts.pendingApps || 0,
                     "Teams": res.data.counts.pendingTeams || 0,
@@ -779,6 +911,8 @@ export default function AdminControlPanel() {
         { id: "Tournaments", label: "Tournaments", icon: Trophy },
         { id: "Referee Management", label: "Referee Management", icon: Flag },
         { id: "Notifications", label: "Tournament Notification", icon: Bell },
+        // 🌟 NEW SETTINGS NAV ITEM
+        { id: "Settings", label: "Settings", icon: Settings },
     ];
 
     const renderContent = () => {
@@ -793,6 +927,8 @@ export default function AdminControlPanel() {
             case "Tournaments": return <TournamentsPage/>;
             case "Referee Management": return <RefereePage />;
             case "Notifications": return <NotificationsPage/>;
+            // 🌟 NEW SETTINGS RENDER ROUTE
+            case "Settings": return <AdminSettings />;
             default: return <DashboardHome setActiveTab={setActiveTab} />;
         }
     };
@@ -828,7 +964,7 @@ export default function AdminControlPanel() {
                         const Icon = item.icon;
                         const isActive = activeTab === item.id;
                         
-                        // 🌟 MAP THE BADGE DATA DIRECTLY TO THIS NAV ITEM
+                        // MAP THE BADGE DATA DIRECTLY TO THIS NAV ITEM
                         const badgeCount = sidebarBadges[item.id] || 0;
 
                         return (
